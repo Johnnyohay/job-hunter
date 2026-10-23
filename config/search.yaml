@@ -20,6 +20,7 @@ include:
   - "ai "
 exclude:
   - intern
+  - internship
   - "software engineer"
   - "data engineer"
   - recruiter
@@ -43,6 +44,6 @@ locations:
   - "north america"
 
 limits:
-  maxScoredPerRun: 60      # at most this many new jobs sent to Claude per day
+  maxScoredPerRun: 25      # at most this many new jobs scored per day (keeps the run inside your Claude plan)
   maxTailoredPerRun: 5     # default; "Max applications per day" in Job Preferences overrides
   minFit: 70               # default; "Minimum fit score" in Job Preferences overrides

@@ -1,0 +1,16 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm run fetch:*)",
+      "Bash(npm run record:*)",
+      "Read(./**)",
+      "Write(./.state/**)",
+      "Edit(./.state/**)",
+      "WebSearch"
+    ],
+    "deny": [
+      "WebFetch(domain:linkedin.com)",
+      "WebFetch(domain:www.linkedin.com)"
+    ]
+  }
+}

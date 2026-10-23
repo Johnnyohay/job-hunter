@@ -1,4 +1,3 @@
-// Loads .env locally; in GitHub Actions the variables come from repository secrets.
 try {
   process.loadEnvFile(".env");
 } catch {
@@ -11,4 +10,5 @@ export function env(name: string): string {
   return value;
 }
 
-export const MODEL = "claude-opus-5-5";
+/** Working files shared between the npm scripts and the Claude Code steps (gitignored). */
+export const STATE = ".state";
