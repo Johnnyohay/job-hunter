@@ -26,6 +26,9 @@ const Result = z.object({
   needs_from_you: z.array(z.string()).default([]),
 });
 
+/** Scores from here up to the minimum fit are tracked as "Possible fit" instead of "Not a fit". */
+const POSSIBLE_FIT = 50;
+
 const read = <T>(file: string): T => JSON.parse(readFileSync(`${STATE}/${file}`, "utf8"));
 
 async function main() {
@@ -45,10 +48,12 @@ async function main() {
     }
     if (tracked.has(job.id)) continue; // already recorded by an earlier run
     const shortlisted = r.fit >= run.minFit && r.recommendation !== "skip";
+    // Below the cutoff for drafting materials, but still worth a look: a 60 is not "not a fit".
+    const possible = !shortlisted && r.fit >= POSSIBLE_FIT && r.recommendation !== "skip";
     const row: Row = {
       "Job ID": job.id, Found: run.date, Company: job.company, Title: job.title, Location: job.location,
       Workplace: job.workplace, Compensation: job.compensation, Fit: String(r.fit),
-      Status: shortlisted ? STATUS.shortlisted : STATUS.notAFit,
+      Status: shortlisted ? STATUS.shortlisted : possible ? STATUS.possible : STATUS.notAFit,
       "Why it fits": r.why_it_fits,
       "Gaps / risks": [r.gaps, ...r.deal_breakers.map((d) => `Deal-breaker: ${d}`)].filter(Boolean).join(" "),
       "Job URL": job.url, "Apply URL": job.applyUrl, "Last Update": run.date,
@@ -78,12 +83,13 @@ async function main() {
   renameSync(`${STATE}/results.json`, `${STATE}/results.recorded.json`);
 
   const ready = rows.filter((r) => r.Status === STATUS.ready);
-  const shortlisted = rows.filter((r) => r.Status !== STATUS.notAFit);
+  const shortlisted = rows.filter((r) => r.Status === STATUS.shortlisted || r.Status === STATUS.ready);
+  const possible = rows.filter((r) => r.Status === STATUS.possible);
   const fetchProblems = existsSync(`${STATE}/fetch-problems.txt`) ? readFileSync(`${STATE}/fetch-problems.txt`, "utf8").split("\n") : [];
   const allProblems = [...fetchProblems, ...problems].filter(Boolean);
   const summary = [
     `## Job agent: ${run.date}`,
-    `${rows.length} new jobs scored, ${shortlisted.length} shortlisted (fit >= ${run.minFit}), ${ready.length} prepared for review.`,
+    `${rows.length} new jobs scored, ${shortlisted.length} shortlisted (fit >= ${run.minFit}), ${ready.length} prepared for review, ${possible.length} possible fits (${POSSIBLE_FIT}-${run.minFit - 1}).`,
     ...ready.map((r) => `- **${r.Company}**: ${r.Title} (fit ${r.Fit}): ${r.Materials}`),
     ...(allProblems.length ? ["", "### Problems", ...allProblems.map((e) => `- ${e}`)] : []),
   ].join("\n");

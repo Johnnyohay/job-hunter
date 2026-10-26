@@ -40,7 +40,7 @@ Drive access goes through a small **Apps Script bridge** (`apps-script/Code.gs`)
 | `Application Tracker` | Everything the agent finds and does (created by the bridge; its id is in `.env`) |
 | `Applications/` | One materials doc per prepared role (created by the bridge; its id is in `.env`) |
 
-Tracker statuses: `Not a fit` → `Shortlisted` → `Ready for review` → **`Approved`** (set by me) → `Applied` / `Skipped`. My own statuses (Interview, Rejected, Offer...) are left alone.
+Tracker statuses: `Not a fit` (below 50 or a deal-breaker), `Possible fit` (50 to the minimum fit; no materials, approve it if you want it) → `Shortlisted` → `Ready for review` → **`Approved`** (set by me) → `Applied` / `Skipped`. My own statuses (Interview, Rejected, Offer...) are left alone.
 
 ## Setup (one time)
 

@@ -11,6 +11,7 @@ export type Row = Partial<Record<Column, string>>;
 /** Statuses the agent writes. You can also set your own (Interview, Rejected, Offer...); the agent leaves those alone. */
 export const STATUS = {
   notAFit: "Not a fit",
+  possible: "Possible fit",
   shortlisted: "Shortlisted",
   ready: "Ready for review",
   approved: "Approved",
