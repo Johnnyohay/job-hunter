@@ -46,7 +46,13 @@ if (!url) {
 } else {
   if (!/^https:\/\/script\.google\.com\/macros\/s\/[\w-]+\/exec$/.test(url)) throw new Error("Expected a URL like https://script.google.com/macros/s/.../exec");
   setEnv("JOB_AGENT_SCRIPT_URL", url);
-  const { listFolder } = await import("./google.ts");
+  const { listFolder, setupAgentFiles } = await import("./google.ts");
   const files = await listFolder(folderId);
   console.log(`Bridge works. The Job Application Agent folder has: ${files.map((f) => f.name).join(", ")}`);
+  if (!process.env.JOB_AGENT_TRACKER_ID) {
+    const own = await setupAgentFiles();
+    setEnv("JOB_AGENT_TRACKER_ID", own.trackerId);
+    setEnv("JOB_AGENT_APPLICATIONS_ID", own.applicationsId);
+    console.log(`Created the agent's own files:\n  Application Tracker: ${own.trackerUrl}\n  Applications folder: ${own.applicationsUrl}`);
+  }
 }

@@ -39,6 +39,16 @@ export async function fileBytes(id: string): Promise<Buffer> {
 /** Creates a Google Doc with plain text in a folder; returns its link. */
 export const createDoc = (folderId: string, name: string, text: string) => call<string>("createDoc", { folderId, name, text });
 
+export interface AgentFiles {
+  trackerId: string;
+  trackerUrl: string;
+  applicationsId: string;
+  applicationsUrl: string;
+}
+
+/** Creates the agent's own tracker sheet and Applications folder. */
+export const setupAgentFiles = () => call<AgentFiles>("setup", {});
+
 /** All rows of the first tab, header row included. */
 export const sheetRows = (id: string) => call<string[][]>("values", { id });
 

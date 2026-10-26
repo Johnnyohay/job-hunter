@@ -1,11 +1,24 @@
 /**
- * Job Agent bridge: lets the local agent read and write the "Job Application Agent" Drive folder
- * without Google Cloud credentials. Deploy once as a web app (see README, "Apps Script bridge").
+ * Job Agent bridge: lets the local agent read the "Job Application Agent" Drive folder and keep its own
+ * tracker and materials docs, without Google Cloud credentials. Deployed as a web app (npm run bridge:deploy).
  *
- * Every request must carry TOKEN, and only files inside ROOT_FOLDER_ID (or its subfolders) can be touched.
+ * Least privilege, enforced by Google through the scopes in appsscript.json:
+ * - drive.readonly: it can read your files but never change or delete them;
+ * - drive.file: it can only create and edit files it created itself (the tracker and materials docs).
+ * On top of that, every request must carry TOKEN, and reads are limited to ROOT_FOLDER_ID and the agent's own files.
  */
 const TOKEN = "__TOKEN__";
 const ROOT_FOLDER_ID = "__FOLDER_ID__";
+
+const DRIVE = "https://www.googleapis.com/drive/v3/files";
+const UPLOAD = "https://www.googleapis.com/upload/drive/v3/files";
+const SHEETS = "https://sheets.googleapis.com/v4/spreadsheets";
+const FOLDER = "application/vnd.google-apps.folder";
+
+/** Opening the web app URL in a browser shows this. */
+function doGet() {
+  return ContentService.createTextOutput("Job agent bridge is running.");
+}
 
 function doPost(e) {
   let out;
@@ -23,93 +36,106 @@ function doPost(e) {
 
 const ACTIONS = {
   list: ({ folderId }) => {
-    const folder = DriveApp.getFolderById(allowed(folderId));
-    const out = [];
-    for (const it = folder.getFolders(); it.hasNext(); ) {
-      const f = it.next();
-      out.push({ id: f.getId(), name: f.getName(), mimeType: "application/vnd.google-apps.folder" });
-    }
-    for (const it = folder.getFiles(); it.hasNext(); ) {
-      const f = it.next();
-      out.push({ id: f.getId(), name: f.getName(), mimeType: f.getMimeType() });
-    }
-    return out;
+    allowed(folderId);
+    const q = encodeURIComponent(`'${folderId}' in parents and trashed = false`);
+    return api("get", `${DRIVE}?q=${q}&fields=files(id,name,mimeType)&pageSize=1000`).files;
   },
 
-  docText: ({ id }) => DocumentApp.openById(allowed(id)).getBody().getText(),
+  docText: ({ id }) => {
+    allowed(id);
+    return api("get", `${DRIVE}/${id}/export?mimeType=text/plain`, null, true).getContentText();
+  },
 
-  bytes: ({ id }) => Utilities.base64Encode(DriveApp.getFileById(allowed(id)).getBlob().getBytes()),
+  bytes: ({ id }) => {
+    allowed(id);
+    return Utilities.base64Encode(api("get", `${DRIVE}/${id}?alt=media`, null, true).getContent());
+  },
 
-  values: ({ id }) => firstSheet(id).getDataRange().getDisplayValues(),
+  values: ({ id }) => {
+    allowed(id);
+    return api("get", `${SHEETS}/${id}/values/A:Z`).values || [];
+  },
 
   append: ({ id, rows }) => {
     if (!rows.length) return 0;
-    const lock = LockService.getScriptLock();
-    lock.waitLock(30000);
-    try {
-      const sheet = firstSheet(id);
-      sheet.getRange(sheet.getLastRow() + 1, 1, rows.length, rows[0].length).setValues(rows.map(asText));
-      return rows.length;
-    } finally {
-      lock.releaseLock();
-    }
+    api("post", `${SHEETS}/${id}/values/A1:append?valueInputOption=RAW&insertDataOption=INSERT_ROWS`, { values: rows });
+    return rows.length;
   },
 
   setRange: ({ id, row, col, values }) => {
-    firstSheet(id).getRange(row, col, values.length, values[0].length).setValues(values.map(asText));
+    const range = encodeURIComponent(column(col) + row);
+    api("put", `${SHEETS}/${id}/values/${range}?valueInputOption=RAW`, { values });
     return true;
   },
 
   createDoc: ({ folderId, name, text }) => {
-    const folder = DriveApp.getFolderById(allowed(folderId));
-    const doc = DocumentApp.create(name);
-    doc.getBody().setText(text);
-    doc.saveAndClose();
-    const file = DriveApp.getFileById(doc.getId());
-    file.moveTo(folder);
-    return file.getUrl();
+    const meta = { name, mimeType: "application/vnd.google-apps.document", parents: [folderId] };
+    const body = "--b\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n" + JSON.stringify(meta) +
+      "\r\n--b\r\nContent-Type: text/plain; charset=UTF-8\r\n\r\n" + text + "\r\n--b--";
+    const res = UrlFetchApp.fetch(`${UPLOAD}?uploadType=multipart&fields=id,webViewLink`, {
+      method: "post",
+      contentType: "multipart/related; boundary=b",
+      payload: Utilities.newBlob(body).getBytes(),
+      headers: { Authorization: "Bearer " + ScriptApp.getOAuthToken() },
+      muteHttpExceptions: true,
+    });
+    if (res.getResponseCode() >= 300) throw new Error("create doc: " + res.getContentText().slice(0, 300));
+    return JSON.parse(res.getContentText()).webViewLink;
+  },
+
+  /** Creates the agent's own tracker sheet and Applications folder (the only files it may edit). */
+  setup: () => {
+    const make = (name, mimeType) => {
+      try {
+        return api("post", `${DRIVE}?fields=id,webViewLink`, { name, mimeType, parents: [ROOT_FOLDER_ID] });
+      } catch (e) {
+        // Not allowed to add to a folder the script didn't create: put it in My Drive instead.
+        return api("post", `${DRIVE}?fields=id,webViewLink`, { name, mimeType });
+      }
+    };
+    const tracker = make("Application Tracker", "application/vnd.google-apps.spreadsheet");
+    const applications = make("Applications", FOLDER);
+    own(tracker.id);
+    own(applications.id);
+    return { trackerId: tracker.id, trackerUrl: tracker.webViewLink, applicationsId: applications.id, applicationsUrl: applications.webViewLink };
   },
 };
 
-function firstSheet(id) {
-  return SpreadsheetApp.openById(allowed(id)).getSheets()[0];
+function api(method, url, payload, raw) {
+  const opts = { method, headers: { Authorization: "Bearer " + ScriptApp.getOAuthToken() }, muteHttpExceptions: true };
+  if (payload) {
+    opts.contentType = "application/json";
+    opts.payload = JSON.stringify(payload);
+  }
+  const res = UrlFetchApp.fetch(url, opts);
+  if (res.getResponseCode() >= 300) {
+    throw new Error(`${method} ${url.split("?")[0]}: ${res.getResponseCode()} ${res.getContentText().slice(0, 300)}`);
+  }
+  return raw ? res : JSON.parse(res.getContentText() || "{}");
 }
 
-/** Stores cells as plain text, so "=..." or "+1 617..." is never read as a formula or number. */
-function asText(row) {
-  return row.map((v) => {
-    const s = v == null ? "" : String(v);
-    return /^[=+\-@]/.test(s) ? "'" + s : s;
-  });
+function column(n) {
+  let s = "";
+  for (; n > 0; n = Math.floor((n - 1) / 26)) s = String.fromCharCode(65 + ((n - 1) % 26)) + s;
+  return s;
 }
 
-/** Throws unless the file or folder is ROOT_FOLDER_ID or somewhere beneath it. */
+/** Files and folders the agent created; reads are allowed inside these and inside ROOT_FOLDER_ID. */
+function ownIds() {
+  return JSON.parse(PropertiesService.getScriptProperties().getProperty("own") || "[]");
+}
+
+function own(id) {
+  PropertiesService.getScriptProperties().setProperty("own", JSON.stringify(ownIds().concat([id])));
+}
+
+/** Throws unless id is ROOT_FOLDER_ID or the agent's own files, or somewhere beneath them. */
 function allowed(id) {
-  if (id === ROOT_FOLDER_ID) return id;
-  const seen = {};
+  const roots = [ROOT_FOLDER_ID].concat(ownIds());
   let frontier = [id];
   for (let depth = 0; depth < 6 && frontier.length; depth++) {
-    const next = [];
-    for (const current of frontier) {
-      const item = current === id ? fileOrFolder(id) : DriveApp.getFolderById(current);
-      for (const parents = item.getParents(); parents.hasNext(); ) {
-        const p = parents.next().getId();
-        if (p === ROOT_FOLDER_ID) return id;
-        if (!seen[p]) {
-          seen[p] = true;
-          next.push(p);
-        }
-      }
-    }
-    frontier = next;
+    if (frontier.some((f) => roots.indexOf(f) >= 0)) return id;
+    frontier = frontier.flatMap((f) => api("get", `${DRIVE}/${f}?fields=parents`).parents || []);
   }
   throw new Error("outside the Job Application Agent folder: " + id);
-}
-
-function fileOrFolder(id) {
-  try {
-    return DriveApp.getFileById(id);
-  } catch (e) {
-    return DriveApp.getFolderById(id);
-  }
 }

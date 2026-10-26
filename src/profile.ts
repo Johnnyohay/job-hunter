@@ -37,7 +37,6 @@ function num(s: string): number | undefined {
 export async function loadProfile(): Promise<Profile> {
   const root = await listFolder(env("JOB_AGENT_FOLDER_ID"));
   const profileFolder = need(pick(root, /^profile$/i, FOLDER), "Profile folder");
-  const applications = need(pick(root, /^applications$/i, FOLDER), "Applications folder");
   const profileFiles = await listFolder(profileFolder.id);
 
   const cvPdf = pick(profileFiles, /^cv\.pdf$/i) ?? profileFiles.find((f) => f.mimeType === "application/pdf" && !/linkedin/i.test(f.name));
@@ -65,10 +64,11 @@ export async function loadProfile(): Promise<Profile> {
     linkedinUrl: field(preferences, "LinkedIn"),
     minFit: num(field(preferences, "Minimum fit score")),
     maxPerDay: num(field(preferences, "Max applications per day")),
-    trackerId: need(pick(root, /^application tracker$/i, GSHEET), '"Application Tracker" sheet').id,
+    // The agent's own tracker and Applications folder (created by `npm run bridge`; the only files it can edit).
+    trackerId: env("JOB_AGENT_TRACKER_ID"),
     targetsId: need(pick(root, /^target positions$/i, GSHEET), '"Target Positions" sheet').id,
     companiesId: need(pick(root, /^companies to watch$/i, GSHEET), '"Companies to Watch" sheet').id,
-    applicationsFolderId: applications.id,
+    applicationsFolderId: env("JOB_AGENT_APPLICATIONS_ID"),
   };
 }
 
