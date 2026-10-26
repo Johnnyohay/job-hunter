@@ -19,7 +19,7 @@ npm run record         Node: materials docs to Drive, rows to the tracker
 
 `.claude/commands/daily.md` is the whole pipeline (it runs fetch and record itself); `scripts/run-daily.sh` runs it headless with `claude -p "/daily"`.
 
-Drive access goes through a small **Apps Script bridge** (`apps-script/Code.gs`) deployed from my own Google account: free, no Google Cloud project. It only accepts requests carrying the token in `.env`, and only touches files inside the Job Application Agent folder.
+Drive access goes through a small **Apps Script bridge** (`apps-script/Code.gs`) deployed from my own Google account: free, no Google Cloud project. It has least-privilege access, enforced by Google: **read-only** on my Drive (`drive.readonly`, so it can never change or delete my files), and edit rights only on files it created itself (`drive.file`): its own *Application Tracker* and *Applications* folder. It also only accepts requests carrying the token in `.env`, and only reads inside the Job Application Agent folder.
 
 ## Ground rules built in
 
@@ -37,8 +37,8 @@ Drive access goes through a small **Apps Script bridge** (`apps-script/Code.gs`)
 | `Job Preferences` | Target roles, locations, comp, deal-breakers, LinkedIn URL, minimum fit score and daily limit |
 | `Target Positions` | Paste job URLs here to have them evaluated directly |
 | `Companies to Watch` | Company, ATS (`greenhouse` / `lever` / `ashby`), board name (the slug in the careers URL), Active |
-| `Application Tracker` | Everything the agent finds and does |
-| `Applications/` | One materials doc per prepared role |
+| `Application Tracker` | Everything the agent finds and does (created by the bridge; its id is in `.env`) |
+| `Applications/` | One materials doc per prepared role (created by the bridge; its id is in `.env`) |
 
 Tracker statuses: `Not a fit` → `Shortlisted` → `Ready for review` → **`Approved`** (set by me) → `Applied` / `Skipped`. My own statuses (Interview, Rejected, Offer...) are left alone.
 
@@ -48,8 +48,10 @@ Tracker statuses: `Not a fit` → `Shortlisted` → `Ready for review` → **`Ap
 npm install
 cp .env.example .env
 npm run check                     # tests the job boards and the filter; needs nothing
-npm run bridge                    # copies the Apps Script to the clipboard and prints the 4 deploy steps
-npm run bridge -- <web app URL>   # saves the URL and tests the connection
+npx @google/clasp login           # once; also turn on the Apps Script API at script.google.com/home/usersettings
+npm run bridge:deploy             # deploys the bridge (re-run after editing apps-script/; keeps the same URL)
+                                  # then authorize once: open the script, Run > doGet, Allow
+npm run bridge -- <web app URL>   # saves the URL, tests it, creates the agent's own tracker and Applications folder
 npm run fetch -- --dry-run        # lists what would be scored; writes nothing
 ```
 
