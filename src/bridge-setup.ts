@@ -53,6 +53,8 @@ if (!url) {
     const own = await setupAgentFiles();
     setEnv("JOB_AGENT_TRACKER_ID", own.trackerId);
     setEnv("JOB_AGENT_APPLICATIONS_ID", own.applicationsId);
+    const { formatTracker } = await import("./tracker.ts");
+    await formatTracker(own.trackerId);
     console.log(`Created the agent's own files:\n  Application Tracker: ${own.trackerUrl}\n  Applications folder: ${own.applicationsUrl}`);
   }
 }

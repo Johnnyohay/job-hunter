@@ -52,12 +52,22 @@ export const setupAgentFiles = () => call<AgentFiles>("setup", {});
 /** All rows of the first tab, header row included. */
 export const sheetRows = (id: string) => call<string[][]>("values", { id });
 
-/** Appends rows (padded to the same width) below the last row of the first tab. */
+/** Same, but with the stored values (dates as serial numbers, numbers as numbers): shows the real cell types. */
+export const sheetRawRows = (id: string) => call<unknown[][]>("values", { id, render: "raw" });
+
+/** Appends rows (typed as if entered by hand: see tracker.ts `cell`) below the last row of the first tab. */
 export const sheetAppend = (id: string, rows: string[][]) => call<number>("append", { id, rows });
 
 /** Writes a block of values starting at a 1-based row and column of the first tab. */
 export const sheetSet = (id: string, row: number, col: number, values: string[][]) =>
   call<boolean>("setRange", { id, row, col, values });
+
+/** First tab's id plus what formatTracker needs to replace instead of duplicate. */
+export const sheetMeta = (id: string) =>
+  call<{ sheetId: number; conditionalFormats: number; hasFilter: boolean }>("meta", { id });
+
+/** Sheets API batchUpdate requests (formatting, validation...). */
+export const sheetBatchUpdate = (id: string, requests: object[]) => call<boolean>("batchUpdate", { id, requests });
 
 /** Rows of the first tab as objects keyed by the header row. */
 export async function sheetRecords(id: string): Promise<Record<string, string>[]> {

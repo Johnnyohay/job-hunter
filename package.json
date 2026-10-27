@@ -10,7 +10,8 @@
     "bridge": "tsx src/bridge-setup.ts",
     "schedule": "bash scripts/schedule.sh",
     "typecheck": "tsc --noEmit",
-    "bridge:deploy": "bash scripts/deploy-bridge.sh"
+    "bridge:deploy": "bash scripts/deploy-bridge.sh",
+    "tracker:format": "tsx src/format-tracker.ts"
   },
   "dependencies": {
     "playwright": "^1.64.1",

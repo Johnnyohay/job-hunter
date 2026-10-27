@@ -51,20 +51,33 @@ const ACTIONS = {
     return Utilities.base64Encode(api("get", `${DRIVE}/${id}?alt=media`, null, true).getContent());
   },
 
-  values: ({ id }) => {
+  values: ({ id, render }) => {
     allowed(id);
-    return api("get", `${SHEETS}/${id}/values/A:Z`).values || [];
+    const option = render === "raw" ? "?valueRenderOption=UNFORMATTED_VALUE" : "";
+    return api("get", `${SHEETS}/${id}/values/A:Z${option}`).values || [];
   },
 
   append: ({ id, rows }) => {
     if (!rows.length) return 0;
-    api("post", `${SHEETS}/${id}/values/A1:append?valueInputOption=RAW&insertDataOption=INSERT_ROWS`, { values: rows });
+    api("post", `${SHEETS}/${id}/values/A1:append?valueInputOption=USER_ENTERED&insertDataOption=INSERT_ROWS`, { values: rows });
     return rows.length;
   },
 
   setRange: ({ id, row, col, values }) => {
     const range = encodeURIComponent(column(col) + row);
-    api("put", `${SHEETS}/${id}/values/${range}?valueInputOption=RAW`, { values });
+    api("put", `${SHEETS}/${id}/values/${range}?valueInputOption=USER_ENTERED`, { values });
+    return true;
+  },
+
+  /** First tab's id, how many conditional format rules it has, and whether it has a filter. */
+  meta: ({ id }) => {
+    const sheet = api("get", `${SHEETS}/${id}?fields=sheets(properties(sheetId),conditionalFormats,basicFilter)`).sheets[0];
+    return { sheetId: sheet.properties.sheetId, conditionalFormats: (sheet.conditionalFormats || []).length, hasFilter: !!sheet.basicFilter };
+  },
+
+  /** Formatting requests (Sheets API batchUpdate). drive.file limits this to sheets the agent created. */
+  batchUpdate: ({ id, requests }) => {
+    api("post", `${SHEETS}/${id}:batchUpdate`, { requests });
     return true;
   },
 
