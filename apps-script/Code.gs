@@ -54,7 +54,7 @@ const ACTIONS = {
   values: ({ id, render }) => {
     allowed(id);
     const option = render === "raw" ? "?valueRenderOption=UNFORMATTED_VALUE" : "";
-    return api("get", `${SHEETS}/${id}/values/A:Z${option}`).values || [];
+    return api("get", `${SHEETS}/${id}/values/A:AZ${option}`).values || [];
   },
 
   append: ({ id, rows }) => {

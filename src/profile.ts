@@ -1,7 +1,7 @@
 import { env } from "./env.ts";
 import { FOLDER, GDOC, GSHEET, docText, fileBytes, listFolder, sheetRecords, type DriveFile } from "./google.ts";
 import { field } from "./text.ts";
-import type { Ats, Company } from "./types.ts";
+import type { Company } from "./types.ts";
 
 export interface Profile {
   cvText?: string;
@@ -75,7 +75,7 @@ export async function loadProfile(): Promise<Profile> {
 export async function loadCompanies(p: Profile): Promise<Company[]> {
   return (await sheetRecords(p.companiesId))
     .filter((r) => r.Board && !/^(no|n|false|0)$/i.test(r.Active ?? ""))
-    .map((r) => ({ company: r.Company || r.Board, ats: (r.ATS || "").toLowerCase() as Ats, board: r.Board }));
+    .map((r) => ({ company: r.Company || r.Board, ats: (r.ATS || "").toLowerCase().trim(), board: r.Board }));
 }
 
 export async function loadTargets(p: Profile): Promise<{ url: string; company: string; title: string }[]> {

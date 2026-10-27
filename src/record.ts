@@ -1,33 +1,37 @@
 // Final step of the daily run: turns Claude Code's verdicts (.state/results.json) and drafted materials
 // (.state/materials/*.md) into tracker rows and Google Docs. Usage: npm run record
 import { appendFileSync, existsSync, mkdirSync, readFileSync, renameSync, writeFileSync } from "node:fs";
-import { z } from "zod";
 import { STATE } from "./env.ts";
+import { factColumns, factsProblems, type Facts } from "./facts.ts";
 import type { RunInfo } from "./fetch.ts";
 import { createDoc } from "./google.ts";
 import { STATUS, appendRows, readTracker, type Row } from "./tracker.ts";
 import type { Job } from "./types.ts";
 
-const Result = z.object({
-  id: z.string(),
-  fit: z.number().min(0).max(100),
-  recommendation: z.enum(["apply", "maybe", "skip"]),
-  why_it_fits: z.string(),
-  gaps: z.string().default(""),
-  deal_breakers: z.array(z.string()).default([]),
-  hiring_manager: z.object({
-    name: z.string(),
-    title: z.string(),
-    linkedin_url: z.string(),
-    confidence: z.enum(["high", "medium", "low", "none"]),
-    evidence: z.string().default(""),
-  }).nullish(),
-  materials_file: z.string().nullish(),
-  needs_from_you: z.array(z.string()).default([]),
-});
+/** One job's verdict in .state/results.json (format: .claude/commands/daily.md). */
+interface Result {
+  id: string;
+  fit: number;
+  recommendation: "apply" | "maybe" | "skip";
+  why_it_fits: string;
+  gaps?: string;
+  deal_breakers?: string[];
+  facts?: Facts;
+  hiring_manager?: { name: string; title: string; linkedin_url: string; confidence: "high" | "medium" | "low" | "none"; evidence?: string } | null;
+  materials_file?: string | null;
+  needs_from_you?: string[];
+}
 
-/** Scores from here up to the minimum fit are tracked as "Possible fit" instead of "Not a fit". */
+/** Scores below this are tracked as "Not a fit"; from here up to the minimum fit, "Possible fit". */
 const POSSIBLE_FIT = 50;
+
+function resultProblems(r: Result): string[] {
+  const problems = factsProblems(r.facts);
+  if (!(r.fit >= 0 && r.fit <= 100)) problems.push(`fit ${r.fit}`);
+  if (!["apply", "maybe", "skip"].includes(r.recommendation)) problems.push(`recommendation "${r.recommendation}"`);
+  if (typeof r.why_it_fits !== "string") problems.push("why_it_fits");
+  return problems;
+}
 
 const read = <T>(file: string): T => JSON.parse(readFileSync(`${STATE}/${file}`, "utf8"));
 
@@ -35,7 +39,7 @@ async function main() {
   if (!existsSync(`${STATE}/results.json`)) throw new Error(`No ${STATE}/results.json: nothing to record.`);
   const run = read<RunInfo>("run.json");
   const jobs = new Map(read<Job[]>("candidates.json").map((j) => [j.id, j]));
-  const results = z.array(Result).parse(read<unknown>("results.json"));
+  const results = read<Result[]>("results.json");
   const tracked = new Set((await readTracker(run.trackerId)).map((r) => r["Job ID"]));
   const problems: string[] = [];
 
@@ -47,15 +51,18 @@ async function main() {
       continue;
     }
     if (tracked.has(job.id)) continue; // already recorded by an earlier run
+    const invalid = resultProblems(r);
+    if (invalid.length) problems.push(`${job.company} ${job.title}: unusable result (${invalid.join("; ")}); recorded without those fields`);
     const shortlisted = r.fit >= run.minFit && r.recommendation !== "skip";
     // Below the cutoff for drafting materials, but still worth a look: a 60 is not "not a fit".
     const possible = !shortlisted && r.fit >= POSSIBLE_FIT && r.recommendation !== "skip";
     const row: Row = {
-      "Job ID": job.id, Found: run.date, Company: job.company, Title: job.title, Location: job.location,
-      Workplace: job.workplace, Compensation: job.compensation, Fit: String(r.fit),
+      "Job ID": job.id, Found: run.date, Company: job.company, Title: job.title,
+      ...factColumns(factsProblems(r.facts).length ? undefined : r.facts, job.location),
+      Fit: String(r.fit),
       Status: shortlisted ? STATUS.shortlisted : possible ? STATUS.possible : STATUS.notAFit,
       "Why it fits": r.why_it_fits,
-      "Gaps / risks": [r.gaps, ...r.deal_breakers.map((d) => `Deal-breaker: ${d}`)].filter(Boolean).join(" "),
+      "Gaps / risks": [r.gaps, ...(r.deal_breakers ?? []).map((d) => `Deal-breaker: ${d}`)].filter(Boolean).join(" "),
       "Job URL": job.url, "Apply URL": job.applyUrl, "Last Update": run.date,
     };
     const hm = r.hiring_manager;
@@ -73,7 +80,7 @@ async function main() {
         problems.push(`materials for ${job.company} ${job.title}: ${(e as Error).message}`);
       }
     }
-    if (r.needs_from_you.length) row.Notes = `Needs from you: ${r.needs_from_you.join("; ")}`;
+    if (r.needs_from_you?.length) row.Notes = `Needs from you: ${r.needs_from_you.join("; ")}`;
     rows.push(row);
   }
 

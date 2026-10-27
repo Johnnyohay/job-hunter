@@ -1,21 +1,13 @@
-import { readFileSync } from "node:fs";
-import { parse } from "yaml";
+import { search } from "../config/search.ts";
 import type { Job } from "./types.ts";
 
-export interface SearchConfig {
-  include: string[];
-  exclude: string[];
-  locations: string[];
-  limits: { maxScoredPerRun: number; maxTailoredPerRun: number; minFit: number };
-}
-
-export const search = parse(readFileSync("config/search.yaml", "utf8")) as SearchConfig;
+export { search };
 
 const words = (s: string) => ` ${s.toLowerCase().replace(/[^a-z0-9]+/g, " ")} `;
 const has = (text: string, term: string) => words(text).includes(words(term));
 
 /** Cheap title/location screen so only plausible jobs reach Claude. */
-export function passesPrefilter(job: Job, cfg: SearchConfig = search): boolean {
+export function passesPrefilter(job: Job, cfg = search): boolean {
   if (!cfg.include.some((t) => has(job.title, t))) return false;
   if (cfg.exclude.some((t) => has(job.title, t))) return false;
   if (!cfg.locations.length) return true;

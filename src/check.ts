@@ -1,13 +1,12 @@
 // Credential-free smoke test: fetches the job boards and shows what passes the keyword filter.
 // Usage: npm run check -- greenhouse:anthropic lever:palantir ashby:lovable
 import { passesPrefilter } from "./filter.ts";
-import { fetchBoard } from "./sources/index.ts";
-import type { Ats } from "./types.ts";
+import { fetchBoard } from "./sources.ts";
 
 const args = process.argv.slice(2);
 const boards = (args.length ? args : ["greenhouse:anthropic", "lever:palantir", "ashby:lovable"]).map((a) => {
   const [ats, board] = a.split(":");
-  return { ats: ats as Ats, board, company: board };
+  return { ats, board, company: board };
 });
 
 for (const b of boards) {

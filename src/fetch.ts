@@ -5,7 +5,7 @@ import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { STATE } from "./env.ts";
 import { passesPrefilter, search } from "./filter.ts";
 import { loadCompanies, loadProfile, loadTargets } from "./profile.ts";
-import { fetchBoard, fetchJobUrl } from "./sources/index.ts";
+import { fetchBoard, fetchJobUrl } from "./sources.ts";
 import { readTracker, today } from "./tracker.ts";
 import type { Job } from "./types.ts";
 
@@ -70,7 +70,7 @@ async function main() {
   };
   writeFileSync(`${STATE}/run.json`, JSON.stringify(run, null, 2));
   writeFileSync(`${STATE}/candidates.json`, JSON.stringify(
-    candidates.map((j) => ({ ...j, description: j.description.slice(0, 6000) })),
+    candidates.map((j) => ({ ...j, description: j.description.slice(0, 15000) })),
     null,
     2,
   ));

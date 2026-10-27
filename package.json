@@ -3,29 +3,26 @@
   "version": "0.1.0",
   "description": "Job application agent: finds roles that fit my CV and preferences daily, drafts tailored materials, tracks everything in Google Sheets, and helps submit applications. Runs on Claude Code; no API keys.",
   "scripts": {
-    "fetch": "tsx src/fetch.ts",
-    "record": "tsx src/record.ts",
-    "apply": "tsx src/apply.ts",
-    "check": "tsx src/check.ts",
-    "bridge": "tsx src/bridge-setup.ts",
+    "fetch": "node src/fetch.ts",
+    "record": "node src/record.ts",
+    "apply": "node src/apply.ts",
+    "check": "node src/check.ts",
+    "bridge": "node src/bridge-setup.ts",
     "schedule": "bash scripts/schedule.sh",
     "typecheck": "tsc --noEmit",
     "bridge:deploy": "bash scripts/deploy-bridge.sh",
-    "tracker:format": "tsx src/format-tracker.ts"
+    "tracker:format": "node src/format-tracker.ts"
   },
   "dependencies": {
-    "playwright": "^1.64.1",
-    "yaml": "^2.9.1",
-    "zod": "^4.6.7"
+    "playwright": "^1.64.1"
   },
   "devDependencies": {
     "@types/node": "^26.6.5",
-    "tsx": "^4.23.15",
     "typescript": "^7.0.2"
   },
   "private": true,
   "type": "module",
   "engines": {
-    "node": ">=22"
+    "node": ">=22.18"
   }
 }

@@ -3,7 +3,7 @@
 My job-application agent. It runs on my Mac through **Claude Code on my existing subscription**: no API keys, no cloud costs. Every morning it:
 
 1. **Finds roles**: pulls every open job from the companies in my *Companies to Watch* sheet (Greenhouse, Lever and Ashby boards) plus any posting I paste into *Target Positions*.
-2. **Screens them**: a keyword and location filter (`config/search.yaml`), then Claude scores each new role 0-100 against my CV, LinkedIn PDF, *About Me* notes and *Job Preferences*.
+2. **Screens them**: a keyword and location filter (`config/search.ts`), then Claude scores each new role 0-100 against my CV, LinkedIn PDF, *About Me* notes and *Job Preferences*.
 3. **Prepares the best ones**: for the top matches (up to my daily limit) it finds the likely **hiring manager** and their LinkedIn profile through web search, then drafts a cover letter, CV tweaks, answers to likely questions and a short LinkedIn note, saved as a Google Doc in `Applications/`.
 4. **Tracks everything** in the *Application Tracker* sheet.
 
@@ -20,6 +20,16 @@ npm run record         Node: materials docs to Drive, rows to the tracker
 `.claude/commands/daily.md` is the whole pipeline (it runs fetch and record itself); `scripts/run-daily.sh` runs it headless with `claude -p "/daily"`.
 
 Drive access goes through a small **Apps Script bridge** (`apps-script/Code.gs`) deployed from my own Google account: free, no Google Cloud project. It has least-privilege access, enforced by Google: **read-only** on my Drive (`drive.readonly`, so it can never change or delete my files), and edit rights only on files it created itself (`drive.file`): its own *Application Tracker* and *Applications* folder. It also only accepts requests carrying the token in `.env`, and only reads inside the Job Application Agent folder.
+
+## Built to last
+
+- **Job boards are data, not code.** `config/ats.ts` describes each ATS: its public endpoint and where each field sits in its response. Following an API change or adding a new ATS means editing that file. If a response stops matching, the run names the missing field instead of silently writing blanks.
+- **The code moves data; Claude interprets it.** Nothing parses pay, workplace or locations with patterns. Claude reads each posting and records the facts (workplace, primary place with coordinates, pay as numbers, plus the text it came from), so changes in how postings are worded don't break anything. `src/facts.ts` checks those facts before they reach the tracker.
+- **Almost no dependencies.** Node (22.18+) runs the TypeScript directly, and everything else uses Node's built-ins (`fetch`, `fs`). The one runtime dependency is Playwright, used only by `npm run apply`. TypeScript is a dev dependency, used only for `npm run typecheck`.
+
+## Tracker columns
+
+Typed for analysis: `Found`, `Applied On` and `Last Update` are dates; `Fit`, `# Locations`, `Comp Min` and `Comp Max` (annual, in `Currency`) are numbers; `Latitude` and `Longitude` are the primary place's coordinates (blank for remote jobs, whose `Country` is where they hire). `Workplace` is one of Remote, Hybrid, Onsite, Flexible or Unknown. `Locations (as posted)` and `Comp (as posted)` keep the original text. `npm run tracker:format` reapplies the layout and moves rows into new columns by name after a schema change.
 
 ## Ground rules built in
 
@@ -67,4 +77,4 @@ The schedule uses macOS launchd: if the Mac is asleep at 8:00, the run starts wh
 
 ## Usage
 
-Each run scores up to 25 new jobs (`maxScoredPerRun` in `config/search.yaml`) and prepares up to 5, which counts against my Claude plan's usage limits. Raise or lower those numbers to match the plan.
+Each run scores up to 25 new jobs (`maxScoredPerRun` in `config/search.ts`) and prepares up to 5, which counts against my Claude plan's usage limits. Raise or lower those numbers to match the plan.

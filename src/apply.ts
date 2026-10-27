@@ -15,11 +15,6 @@ async function fill(page: Page, label: RegExp, value: string) {
   if (await input.count()) await input.fill(value).catch(() => {});
 }
 
-function applyUrl(jobId: string, url: string): string {
-  // Ashby's apply URL is the posting page; the form lives at /application.
-  return jobId.startsWith("ashby:") && !url.endsWith("/application") ? `${url.replace(/\/$/, "")}/application` : url;
-}
-
 async function main() {
   const profile = await loadProfile();
   const approved = (await readTracker(profile.trackerId)).filter((r) => r.Status === STATUS.approved);
@@ -52,7 +47,7 @@ async function main() {
   const context = await browser.newContext();
 
   for (const row of approved) {
-    const url = applyUrl(row["Job ID"] ?? "", row["Apply URL"] || row["Job URL"] || "");
+    const url = row["Apply URL"] || row["Job URL"] || "";
     console.log(`\n${row.Company}: ${row.Title}\n${url}`);
     const page = await context.newPage();
     await page.goto(url, { waitUntil: "domcontentloaded" });

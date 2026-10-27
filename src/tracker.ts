@@ -1,6 +1,6 @@
 import { sheetAppend, sheetBatchUpdate, sheetMeta, sheetRows, sheetSet } from "./google.ts";
 
-type Kind = "text" | "date" | "number" | "url" | "longtext";
+type Kind = "text" | "date" | "number" | "decimal" | "money" | "url" | "longtext";
 
 /** Every tracker column and the type of data it holds. Order = column order in the sheet. */
 const SCHEMA = [
@@ -8,9 +8,18 @@ const SCHEMA = [
   ["Found", "date", 95],
   ["Company", "text", 110],
   ["Title", "text", 260],
-  ["Location", "text", 170],
-  ["Workplace", "text", 90],
-  ["Compensation", "text", 140],
+  ["Workplace", "text", 85],
+  ["City", "text", 110],
+  ["State", "text", 110],
+  ["Country", "text", 105],
+  ["Latitude", "decimal", 80],
+  ["Longitude", "decimal", 85],
+  ["# Locations", "number", 85],
+  ["Locations (as posted)", "text", 200],
+  ["Comp Min", "money", 90],
+  ["Comp Max", "money", 90],
+  ["Currency", "text", 70],
+  ["Comp (as posted)", "text", 200],
   ["Fit", "number", 50],
   ["Status", "text", 130],
   ["Why it fits", "longtext", 320],
@@ -53,29 +62,30 @@ function cell(kind: Kind, value: string | undefined): string {
   const v = (value ?? "").trim();
   if (!v) return "";
   if (kind === "date" && /^\d{4}-\d{2}-\d{2}$/.test(v)) return v;
-  if (kind === "number" && /^-?\d+(\.\d+)?$/.test(v)) return v;
+  if ((kind === "number" || kind === "decimal" || kind === "money") && /^-?\d+(\.\d+)?$/.test(v)) return v;
   if (kind === "url" && /^https?:\/\/\S+$/.test(v)) return v;
   return `'${v}`;
 }
 
 const toCells = (r: Row) => SCHEMA.map(([name, kind]) => cell(kind, r[name]));
 
-export interface TrackedRow extends Row {
-  rowNumber: number;
-}
+export type TrackedRow = Row & Record<string, string> & { rowNumber: number };
 
-export async function readTracker(spreadsheetId: string): Promise<TrackedRow[]> {
+/** Rows keyed by the sheet's own header, so a sheet with older columns can still be read (and migrated). */
+export async function readTracker(spreadsheetId: string, { allowOldColumns = false } = {}): Promise<TrackedRow[]> {
   const rows = await sheetRows(spreadsheetId);
-  const header = rows[0] ?? [];
-  if (COLUMNS.some((c, i) => header[i] !== c)) {
-    // Keeps the header and column formats in sync with the code.
+  let header = rows[0] ?? [];
+  if (!header.length) {
     await sheetSet(spreadsheetId, 1, 1, [[...COLUMNS]]);
     await formatTracker(spreadsheetId);
+    header = [...COLUMNS];
+  } else if (!allowOldColumns && COLUMNS.some((c, i) => header[i] !== c)) {
+    throw new Error("The tracker's columns are from an older version. Run: npm run tracker:format");
   }
   return rows.slice(1).map((r, i) => ({
+    ...Object.fromEntries(header.map((h, j) => [h, r[j] ?? ""])),
     rowNumber: i + 2,
-    ...Object.fromEntries(COLUMNS.map((c, j) => [c, r[j] ?? ""])),
-  }));
+  }) as TrackedRow);
 }
 
 export async function appendRows(spreadsheetId: string, rows: Row[]): Promise<void> {
@@ -90,11 +100,9 @@ export async function updateRow(spreadsheetId: string, rowNumber: number, change
   }
 }
 
-/** Rewrites every data row with typed cells (e.g. after rows were stored as plain text). */
-export async function retypeRows(spreadsheetId: string): Promise<number> {
-  const rows = await readTracker(spreadsheetId);
-  if (rows.length) await sheetSet(spreadsheetId, 2, 1, rows.map(toCells));
-  return rows.length;
+/** Rewrites the whole table in the current columns: header plus every row, typed. */
+export async function rewriteTracker(spreadsheetId: string, rows: Row[]): Promise<void> {
+  await sheetSet(spreadsheetId, 1, 1, [[...COLUMNS], ...rows.map(toCells)]);
 }
 
 /**
@@ -108,6 +116,8 @@ export async function formatTracker(spreadsheetId: string): Promise<void> {
   const fmt: Record<Kind, object> = {
     date: { numberFormat: { type: "DATE", pattern: "yyyy-mm-dd" }, horizontalAlignment: "CENTER" },
     number: { numberFormat: { type: "NUMBER", pattern: "0" }, horizontalAlignment: "CENTER" },
+    decimal: { numberFormat: { type: "NUMBER", pattern: "0.0000" }, horizontalAlignment: "RIGHT" },
+    money: { numberFormat: { type: "NUMBER", pattern: "#,##0" }, horizontalAlignment: "RIGHT" },
     text: { numberFormat: { type: "TEXT" }, wrapStrategy: "CLIP" },
     url: { numberFormat: { type: "TEXT" }, wrapStrategy: "CLIP" },
     longtext: { numberFormat: { type: "TEXT" }, wrapStrategy: "WRAP" },
@@ -118,6 +128,7 @@ export async function formatTracker(spreadsheetId: string): Promise<void> {
   await sheetBatchUpdate(spreadsheetId, [
     ...Array.from({ length: conditionalFormats }, () => ({ deleteConditionalFormatRule: { sheetId, index: 0 } })),
     ...(hasFilter ? [{ clearBasicFilter: { sheetId } }] : []),
+    { setDataValidation: { range: { sheetId } } }, // clears old dropdowns (columns may have moved)
     {
       updateSheetProperties: {
         properties: { sheetId, title: "Tracker", gridProperties: { frozenRowCount: 1 } },

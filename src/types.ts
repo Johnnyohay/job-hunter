@@ -1,9 +1,9 @@
-export type Ats = "greenhouse" | "lever" | "ashby" | "manual";
-
+/** A posting as the job board states it. Interpretation (fit, pay, place) is Claude's job. */
 export interface Job {
   /** Stable id used for de-duplication in the tracker, e.g. "greenhouse:anthropic:12345". */
   id: string;
-  ats: Ats;
+  /** A key of config/ats.ts, or "manual" for any other page. */
+  ats: string;
   board: string;
   company: string;
   title: string;
@@ -18,6 +18,6 @@ export interface Job {
 
 export interface Company {
   company: string;
-  ats: Ats;
+  ats: string;
   board: string;
 }

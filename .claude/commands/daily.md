@@ -32,9 +32,22 @@ Write `.state/results.json`: a JSON array with one object per job, in this shape
   "recommendation": "apply | maybe | skip",
   "why_it_fits": "1-2 sentences citing concrete CV evidence",
   "gaps": "1-2 sentences: missing requirements, risks or preference conflicts; empty if none",
-  "deal_breakers": ["preference deal-breakers this job hits"]
+  "deal_breakers": ["preference deal-breakers this job hits"],
+  "facts": {
+    "workplace": "Remote | Hybrid | Onsite | Flexible | Unknown",
+    "place": { "city": "", "state": "", "country": "", "lat": 0.0, "lng": 0.0 },
+    "remote_region": "",
+    "location_count": 0,
+    "pay": { "min": 0, "max": 0, "currency": "USD", "period": "year | hour", "as_posted": "" }
+  }
 }
 ```
+
+`facts` records what the posting states, for analysis. Read it from the posting's location, workplace, compensation and description; never infer or estimate:
+- `workplace`: Remote (fully remote), Hybrid (some days in an office), Onsite, Flexible (remote or office, the candidate's choice), or Unknown if the posting doesn't say.
+- `place`: the job's primary location, meaning the listed location that best matches my preferences, otherwise the first listed. Use the full, real place name (e.g. "New York", "New York", "United States") and the city center's coordinates to 4 decimals. Use `null` for remote-only jobs, and put where they hire in `remote_region` (e.g. "United States"); otherwise `remote_region` is "".
+- `location_count`: how many distinct places are listed (0 for remote-only).
+- `pay`: the stated base pay range. If ranges differ by location, use the range for `place`; if that isn't given, use the lowest minimum and highest maximum. `period` is "year" or "hour" as stated; `as_posted` quotes the text it came from. Use `null` if no range is stated: never estimate pay.
 
 Score all of them before moving on; write the file as you go if there are many.
 

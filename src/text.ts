@@ -14,8 +14,10 @@ export function decodeEntities(s: string): string {
 }
 
 export function htmlToText(html: string): string {
+  // Greenhouse sends the HTML itself entity-encoded ("&lt;p&gt;..."): decode once before stripping tags.
+  const markup = /&lt;\/?[a-z]/i.test(html) ? decodeEntities(html) : html;
   return decodeEntities(
-    html
+    markup
       .replace(/<(script|style)[\s\S]*?<\/\1>/gi, "")
       .replace(/<br\s*\/?>/gi, "\n")
       .replace(/<\/(p|div|li|h[1-6]|tr)>/gi, "\n")
