@@ -1,0 +1,1000 @@
+<title>Boston Job Radar</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: one working column, summary first (figures), then the role list to act on, then market context in a two-up grid. */
+:root{
+  --bg:#f3f5f8; --surface:#ffffff; --ink:#111a24; --ink2:#4a5868; --ink3:#7a8696; --line:#dde3ea; --line2:#eef1f5;
+  --accent:#1f5fae; --accent-soft:#e3edf9;
+  --s1:#2a78d6; --s2:#eb6834; --s3:#1baf7a; --s4:#eda100; --neg:#e34948; --mid:#c9d0d8;
+  --good:#0ca30c; --critical:#d03b3b; --warn:#b97a00;
+  --sans:"Public Sans",system-ui,-apple-system,"Segoe UI",sans-serif; --mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  --bg:#10151b; --surface:#19202a; --ink:#f2f5f8; --ink2:#b4bfcc; --ink3:#8491a1; --line:#2b3542; --line2:#222b36;
+  --accent:#7fb2f0; --accent-soft:#1d2c40; --s1:#3987e5; --s2:#d95926; --s3:#199e70; --s4:#c98500; --neg:#e66767; --mid:#3a4553;
+  --good:#3fc43f; --critical:#e66767; --warn:#fab219; color-scheme:dark } }
+:root[data-theme="dark"]{
+  --bg:#10151b; --surface:#19202a; --ink:#f2f5f8; --ink2:#b4bfcc; --ink3:#8491a1; --line:#2b3542; --line2:#222b36;
+  --accent:#7fb2f0; --accent-soft:#1d2c40; --s1:#3987e5; --s2:#d95926; --s3:#199e70; --s4:#c98500; --neg:#e66767; --mid:#3a4553;
+  --good:#3fc43f; --critical:#e66767; --warn:#fab219; color-scheme:dark }
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:14px;line-height:1.45;margin:0;padding-inline:16px;padding-block:20px 48px}
+.wrap{max-width:1180px;margin:0 auto;display:flex;flex-direction:column;gap:28px}
+header.top{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-end;gap:8px 24px;border-bottom:2px solid var(--ink);padding-bottom:12px}
+h1{font-size:26px;font-weight:700;letter-spacing:-.01em;margin:0}
+.sub{color:var(--ink2);margin:2px 0 0;max-width:62ch}
+.asof{font-family:var(--mono);font-size:12px;color:var(--ink2);text-align:right}
+h2{font-size:17px;font-weight:700;margin:0;text-wrap:balance}
+.note{color:var(--ink2);font-size:13px;margin:2px 0 0;max-width:80ch}
+section{display:flex;flex-direction:column;gap:12px;min-width:0}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:1px;background:var(--line);border:1px solid var(--line)}
+.kpi{background:var(--surface);padding:14px 14px 12px;display:flex;flex-direction:column;gap:2px;min-width:0}
+.kpi .v{font-family:var(--mono);font-size:26px;font-weight:500;letter-spacing:-.02em}
+.kpi .l{font-size:12.5px;font-weight:600}
+.kpi .d{font-size:12px;color:var(--ink2)}
+.panel{background:var(--surface);border:1px solid var(--line);padding:16px;display:flex;flex-direction:column;gap:10px;min-width:0}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,420px),1fr));gap:16px}
+.filters{display:flex;flex-wrap:wrap;gap:8px 12px;align-items:flex-end}
+.filters label{max-width:100%;min-width:0;display:flex;flex-direction:column;gap:3px;font-size:11.5px;font-weight:600;color:var(--ink2);text-transform:uppercase;letter-spacing:.04em}
+.filters label.chk{flex-direction:row;align-items:center;gap:6px;text-transform:none;letter-spacing:0;font-size:13px;font-weight:500;color:var(--ink);padding-bottom:6px}
+select,input[type=search]{max-width:100%;font:inherit;font-size:13.5px;color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:4px;padding:6px 8px;min-width:0}
+input[type=search]{width:220px;max-width:100%}
+select:focus-visible,input:focus-visible,button:focus-visible,a:focus-visible,summary:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.count{font-family:var(--mono);font-size:12.5px;color:var(--ink2);margin-left:auto;padding-bottom:6px}
+.tablebox{overflow-x:auto;border:1px solid var(--line);background:var(--surface)}
+table{border-collapse:collapse;width:100%;font-size:13px}
+th{font-size:11.5px;text-transform:uppercase;letter-spacing:.04em;color:var(--ink2);text-align:left;font-weight:600;padding:8px 10px;border-bottom:1px solid var(--line);white-space:nowrap;background:var(--surface)}
+td{padding:7px 10px;border-bottom:1px solid var(--line2);vertical-align:top}
+tr:last-child td{border-bottom:0}
+td.num,th.num{text-align:right;font-family:var(--mono);font-variant-numeric:tabular-nums;white-space:nowrap}
+td.t{min-width:220px}
+a{color:var(--accent);text-decoration-thickness:1px;text-underline-offset:2px}
+.pill{display:inline-block;font-size:11.5px;font-weight:600;padding:1px 7px;border-radius:999px;border:1px solid var(--line);color:var(--ink2);white-space:nowrap}
+.pill.target{background:var(--accent-soft);border-color:transparent;color:var(--accent)}
+.pill.new{border-color:var(--good);color:var(--good)}
+.pill.low{border-color:var(--warn);color:var(--warn)}
+.muted{color:var(--ink3)}
+button.more{font:inherit;font-weight:600;color:var(--accent);background:var(--surface);border:1px solid var(--line);border-radius:4px;padding:8px 14px;cursor:pointer;align-self:flex-start}
+button.more:hover{background:var(--accent-soft)}
+svg{display:block;width:100%;height:auto;overflow:visible}
+svg text{font-family:var(--sans);fill:var(--ink2);font-size:11.5px}
+svg text.v{font-family:var(--mono);fill:var(--ink)}
+.legend{display:flex;flex-wrap:wrap;gap:4px 16px;font-size:12.5px;color:var(--ink2)}
+.legend i{display:inline-block;width:14px;height:3px;border-radius:2px;vertical-align:middle;margin-right:6px}
+.chart{position:relative}
+.tip{position:absolute;pointer-events:none;background:var(--ink);color:var(--bg);font-size:12px;padding:6px 8px;border-radius:4px;white-space:nowrap;z-index:5;transform:translate(-50%,-110%);line-height:1.35}
+.tip b{font-family:var(--mono);font-weight:500}
+.scroll{max-height:430px;overflow:auto}
+.scroll th{position:sticky;top:0;z-index:1}
+h3{font-size:14.5px;font-weight:700;margin:0}
+.cover{color:var(--ink2);font-size:12.5px;margin:0;max-width:95ch}
+#t-score td:first-child{min-width:230px}
+#t-score th,#t-cross th{white-space:normal;min-width:78px;vertical-align:bottom}
+#t-cross td:first-child{min-width:190px}
+#c-fit svg{max-width:820px}
+#t-cross td.heat{color:var(--ink)}
+.q{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--accent);margin:0}
+.block{display:flex;flex-direction:column;gap:14px;border-top:2px solid var(--ink);padding-top:14px}
+.tsub{display:flex;flex-direction:column;gap:6px;min-width:0}
+td.sp{width:96px;padding-block:3px}
+td.sp svg{width:88px;height:24px}
+tr.agg td{color:var(--ink2)}
+tr.subrow td:first-child{padding-left:24px}
+.up::before{content:"▲ ";font-size:9px}.down::before{content:"▼ ";font-size:9px}
+th.sortable{cursor:pointer;user-select:none}
+th.sortable:hover{color:var(--ink)}
+th[aria-sort="descending"]::after{content:" ↓"}
+th[aria-sort="ascending"]::after{content:" ↑"}
+th[aria-sort]{color:var(--accent)}
+button.hide{border:0;background:none;color:var(--ink3);cursor:pointer;font:inherit;font-size:15px;line-height:1;padding:0 5px;margin-left:6px;border-radius:3px;opacity:.6}
+button.hide:hover{opacity:1;color:var(--critical);background:var(--line2)}
+#hidden-bar{display:flex;flex-wrap:wrap;gap:6px 8px;align-items:center;font-size:12.5px;color:var(--ink2)}
+#hidden-bar button{font:inherit;font-size:12.5px;border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:999px;padding:2px 10px;cursor:pointer}
+#hidden-bar button:hover{background:var(--accent-soft)}
+#hidden-bar button.all{font-weight:600;color:var(--accent)}
+.gbar{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:var(--bg);border-bottom:1px solid var(--line);padding-block:8px;display:flex;flex-wrap:wrap;gap:8px 12px;align-items:flex-end}
+.gbar label{max-width:100%;min-width:0;display:flex;flex-direction:column;gap:3px;font-size:11.5px;font-weight:600;color:var(--ink2);text-transform:uppercase;letter-spacing:.04em}
+.gbar label.chk{flex-direction:row;align-items:center;gap:6px;text-transform:none;letter-spacing:0;font-size:13px;font-weight:500;color:var(--ink);padding-bottom:6px}
+.gbar button{font:inherit;font-size:13px;font-weight:600;color:var(--accent);background:var(--surface);border:1px solid var(--line);border-radius:4px;padding:6px 12px;cursor:pointer;margin-bottom:1px}
+.gbar .gstat{font-family:var(--mono);font-size:12px;color:var(--ink2);padding-bottom:7px;margin-left:auto}
+tr.fq-hide{display:none}
+#ask-open{position:fixed;right:16px;bottom:calc(16px + env(safe-area-inset-bottom,0px));z-index:40;font:inherit;font-weight:700;font-size:14px;color:var(--surface);background:var(--accent);border:0;border-radius:999px;padding:11px 18px;cursor:pointer;box-shadow:0 4px 14px rgba(0,0,0,.25)}
+#ask{position:fixed;right:16px;bottom:calc(16px + env(safe-area-inset-bottom,0px));z-index:41;width:min(440px,calc(100vw - 32px));height:min(620px,calc(100vh - 90px));background:var(--surface);border:1px solid var(--line);border-radius:10px;box-shadow:0 10px 34px rgba(0,0,0,.3);display:flex;flex-direction:column;overflow:hidden}
+#ask header{display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border-bottom:1px solid var(--line);font-weight:700}
+#ask header button{font:inherit;border:0;background:none;color:var(--ink2);cursor:pointer;font-size:13px;padding:4px 6px}
+#ask-log{flex:1;overflow-y:auto;padding:12px;display:flex;flex-direction:column;gap:10px;font-size:13.5px}
+.msg{white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.45;padding:8px 10px;border-radius:8px;max-width:100%}
+.msg.you{background:var(--accent-soft);align-self:flex-end}
+.msg.ai{background:var(--line2);align-self:flex-start}
+.msg.sys{color:var(--ink2);font-size:12.5px;padding:0}
+#ask-sugg{display:flex;flex-wrap:wrap;gap:6px}
+#ask-sugg button{font:inherit;font-size:12.5px;text-align:left;border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:8px;padding:6px 9px;cursor:pointer}
+#ask-sugg button:hover{background:var(--accent-soft)}
+#ask form{display:flex;gap:8px;padding:10px;border-top:1px solid var(--line)}
+#ask textarea{flex:1;font:inherit;font-size:13.5px;color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:7px 8px;resize:none;min-width:0}
+#ask form button{font:inherit;font-weight:700;color:var(--surface);background:var(--accent);border:0;border-radius:6px;padding:0 14px;cursor:pointer}
+#ask form button.stop{background:var(--critical)}
+details{font-size:12.5px;color:var(--ink2)}
+details summary{cursor:pointer;width:max-content}
+details:not(#all-data) .tablebox{margin-top:8px;max-height:260px;overflow:auto}
+#all-data{font-size:14px;color:var(--ink);border-top:2px solid var(--ink);padding-top:14px}
+#all-data>summary{font-size:17px;font-weight:700;width:auto}
+#all-data .stack{display:flex;flex-direction:column;gap:28px;margin-top:16px;min-width:0}
+#all-data .gbar{position:static}
+.main{display:flex;flex-direction:column;gap:10px;min-width:0}
+.main h2{font-size:19px}
+.main .num-h{font-family:var(--mono);font-weight:500;color:var(--accent);margin-right:8px}
+.chips{display:flex;flex-wrap:wrap;gap:4px}
+.chip{display:inline-block;font-size:11.5px;line-height:1.3;padding:1px 7px;border-radius:999px;background:var(--accent-soft);color:var(--ink)}
+.chip.gap{background:none;border:1px dashed var(--ink3);color:var(--ink2)}
+.chip.tag{background:none;border:1px solid var(--warn);color:var(--warn)}
+td.wide{min-width:210px}
+.main th{white-space:normal;vertical-align:bottom}
+#m-ind td:first-child,#m-fit-ind td:first-child{min-width:220px}
+#m-ind td:nth-child(4){min-width:260px}
+.chip{white-space:nowrap}
+.bar{display:inline-block;height:8px;border-radius:4px;background:var(--s1);vertical-align:middle;margin-right:6px}
+.ideas{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,330px),1fr));gap:12px}
+.idea{background:var(--surface);border:1px solid var(--line);padding:14px;display:flex;flex-direction:column;gap:6px}
+.idea h3{font-size:15px}
+.idea p{margin:0;font-size:13.5px}
+.idea .why{color:var(--ink2);font-size:12.5px}
+.status{font-weight:600}.status.ok{color:var(--good)}.status.failed{color:var(--critical)}
+footer{color:var(--ink2);font-size:12.5px;border-top:1px solid var(--line);padding-top:12px;max-width:90ch}
+@media (max-width:520px){h1{font-size:22px}.kpi .v{font-size:22px}.count{margin-left:0}}
+</style>
+
+<div class="wrap">
+  <header class="top">
+    <div>
+      <h1>Boston Job Radar</h1>
+    </div>
+    <div class="asof" id="asof"></div>
+  </header>
+
+  <section class="main" id="s-ind">
+    <h2><span class="num-h">1</span>Industries hiring your kind of role around Boston now</h2>
+    <div class="tablebox"><table id="m-ind"><thead><tr><th>Industry</th><th class="num">Roles posted, last 30 days</th><th class="num">Open now</th><th>Companies hiring</th><th class="num">MA H-1B filings, your lanes, past year</th><th class="num">Median offered wage</th><th class="num">Boston jobs, 1 year</th></tr></thead><tbody></tbody></table></div>
+  </section>
+
+  <section class="main" id="s-roles">
+    <h2><span class="num-h">2</span>Boston roles in demand that match your CV</h2>
+    <div class="tablebox"><table id="m-roles"><thead><tr><th>Role</th><th class="num">Pay</th><th class="num">Posted</th><th class="num">Companies hiring this title</th><th class="num">CV match</th><th>Asks that are on your CV</th><th>Asks not on your CV</th></tr></thead><tbody></tbody></table></div>
+    <button class="more" id="m-more" type="button">Show 10 more</button>
+  </section>
+
+  <section class="main" id="s-fit">
+    <h2><span class="num-h">3</span>How your skills match each role type and industry</h2>
+    <h3>By role type</h3>
+    <div class="tablebox"><table id="m-fit-role"><thead><tr><th>Role type</th><th class="num">Companies hiring</th><th class="num">Open roles</th><th class="num">In Boston</th><th class="num">CV match</th><th>Most requested skills you have</th><th>Most requested skills not on your CV</th></tr></thead><tbody></tbody></table></div>
+    <h3>By industry</h3>
+    <div class="tablebox"><table id="m-fit-ind"><thead><tr><th>Industry</th><th class="num">Companies hiring</th><th class="num">Open roles</th><th class="num">In Boston</th><th class="num">CV match</th><th>Most requested skills you have</th><th>Most requested skills not on your CV</th></tr></thead><tbody></tbody></table></div>
+  </section>
+
+  <section class="main" id="s-proof">
+    <h2><span class="num-h">4</span>The evidence</h2>
+    <div class="grid2">
+      <div class="panel">
+        <h3>Where demand and your fit meet</h3>
+        <p class="note">Each dot is a role type. Right: more of what it asks for is on your CV. Up: more companies hiring it. Filled: has an open Boston role.</p>
+        <div class="chart" id="m-chart-fit"></div>
+      </div>
+      <div class="panel">
+        <h3 id="h-trendline">Boston jobs by industry</h3>
+        <p class="note" id="n-trendline"></p>
+        <div class="legend" id="m-legend"></div>
+        <div class="chart" id="m-chart-trend"></div>
+      </div>
+    </div>
+    <h3 id="h-cases">Documented cases: Massachusetts employers that sponsored these exact titles</h3>
+    <div class="tablebox"><table id="m-cases"><thead><tr><th>Role type</th><th class="num">Certified H-1B filings</th><th class="num">Median offered wage</th><th>Employers</th></tr></thead><tbody></tbody></table></div>
+  </section>
+
+  <section class="main" id="s-stand">
+    <h2><span class="num-h">5</span>Ways to stand out outside LinkedIn</h2>
+    <div class="ideas" id="m-stand"></div>
+  </section>
+
+  <details id="all-data"><summary>All data tables and filters</summary><div class="stack">
+
+  <div class="gbar" role="search" aria-label="Filters for the whole page">
+    <label for="f-q">Search every table<input type="search" id="f-q" placeholder="company, industry, title"></label>
+    <label for="f-lane">Lane<select id="f-lane"></select></label>
+    <label for="f-region">Region<select id="f-region"></select></label>
+    <label class="chk" for="f-floor"><input type="checkbox" id="f-floor"> Hide pay below floor</label>
+    <button type="button" id="f-reset">Clear filters</button>
+    <span class="gstat" id="gstat"></span>
+  </div>
+
+
+
+  <section id="trends">
+    <h2>Trends: where the market is moving</h2>
+    <p class="note">Click a column heading to sort. Click × beside an industry to hide it.</p>
+
+    <div class="block">
+      <p class="q">Which industries</p>
+      <div id="hidden-bar" hidden></div>
+      <div class="tsub">
+        <h3>Fit and growth by industry</h3>
+        <p class="note" id="n-fit">Chart notes.</p>
+        <div class="legend" id="l-fit"></div>
+        <div class="chart" id="c-fit"></div>
+      </div>
+      <div class="tsub">
+        <h3>Industry by lane: where your kind of role gets hired</h3>
+        <p class="note" id="n-cross"></p>
+        <div class="tablebox scroll"><table id="t-cross"></table></div>
+      </div>
+      <div class="tsub">
+        <h3>Industry scorecard: where your lanes, pay and momentum line up</h3>
+        <p class="cover" id="n-cover"></p>
+        <p class="note" id="n-score"></p>
+        <div class="tablebox scroll"><table id="t-score"><thead><tr><th>Industry</th><th class="num">Average rank</th><th class="num">H-1B filings, your lanes</th><th class="num">Median offered wage, your lanes</th><th class="num">All H-1B filings</th><th class="num">Open roles now, your lanes</th><th class="num">Of those, Boston area</th><th class="num">Boston jobs</th><th class="num">Jobs, 1 year</th><th class="num">Weekly wage</th><th class="num">Wage, 1 year</th><th class="num">US openings rate, all jobs nationwide</th><th class="num">Change in points</th></tr></thead><tbody></tbody></table></div>
+      </div>
+      <div class="tsub">
+        <h3 id="h-tind">Jobs by industry, Boston metro</h3>
+        <p class="note">All industries, not only tech. Sparkline: jobs in the same month of each year since 2015. Sorted by 1-year change. Indented rows are sub-industries. Source: BLS CES.</p>
+        <div class="tablebox scroll"><table id="t-ind"><thead><tr><th>Industry</th><th>Since 2015</th><th class="num">Jobs now</th><th class="num">1 year, jobs</th><th class="num">1 year, %</th><th class="num">3 years</th><th class="num">Since 2019</th></tr></thead><tbody></tbody></table></div>
+      </div>
+      <div class="grid2">
+        <div class="tsub">
+          <h3 id="h-grow">Detailed industries growing fastest</h3>
+          <p class="note">Private employers, Boston metro, industries with at least 2,000 jobs. Change against the same quarter a year earlier. Source: BLS QCEW.</p>
+          <div class="tablebox scroll"><table id="t-grow"><thead><tr><th>Industry</th><th class="num">Jobs</th><th class="num">Jobs, 1 year</th><th class="num">Weekly wage</th><th class="num">Wage, 1 year</th></tr></thead><tbody></tbody></table></div>
+        </div>
+        <div class="tsub">
+          <h3>Detailed industries shrinking fastest</h3>
+          <p class="note">Same source and rules as the table beside it.</p>
+          <div class="tablebox scroll"><table id="t-shrink"><thead><tr><th>Industry</th><th class="num">Jobs</th><th class="num">Jobs, 1 year</th><th class="num">Weekly wage</th><th class="num">Wage, 1 year</th></tr></thead><tbody></tbody></table></div>
+        </div>
+      </div>
+      <div class="tsub">
+        <h3 id="h-jolts">Hiring demand by industry, United States</h3>
+        <p class="note">Job openings rate: open positions as a percent of all positions. A rising rate means employers are looking for more people. Sparkline: the same month of each year since 2015. Source: BLS JOLTS (industry detail is national only).</p>
+        <div class="tablebox scroll"><table id="t-jol"><thead><tr><th>Industry</th><th>Openings rate since 2015</th><th class="num">Openings rate</th><th class="num">A year earlier</th><th class="num">Change, points</th><th class="num">Hires rate</th><th class="num">Quits rate</th><th class="num">Layoffs rate</th></tr></thead><tbody></tbody></table></div>
+      </div>
+      <div class="tsub">
+        <h3>H-1B filings by industry, Massachusetts</h3>
+        <p class="note lca-note"></p>
+        <div class="tablebox scroll"><table id="t-lsector"></table></div>
+      </div>
+    </div>
+
+    <div class="block">
+      <p class="q">Which roles</p>
+      <div class="grid2">
+        <div class="tsub">
+          <h3>H-1B filings for your lanes, Massachusetts</h3>
+          <p class="note lca-note"></p>
+          <div class="tablebox scroll"><table id="t-llane"></table></div>
+        </div>
+        <div class="tsub">
+          <h3>When the open roles in your lanes were posted</h3>
+          <p class="note">Counts only roles still open today, by the month the employer posted them. Older months look small because filled roles have left the boards, so compare lanes with each other, not months.</p>
+          <div class="tablebox scroll"><table id="t-pmonth"></table></div>
+        </div>
+      </div>
+      <div class="tsub">
+        <h3>H-1B filings by occupation, Massachusetts</h3>
+        <p class="note">Occupation as classified by the employer on the filing, all industries. <span class="lca-note"></span></p>
+        <div class="tablebox scroll"><table id="t-lsoc"></table></div>
+      </div>
+    </div>
+
+    <div class="block">
+      <p class="q">Which companies</p>
+      <div class="grid2">
+        <div class="tsub">
+          <h3>Posting the most roles in your lanes, last 30 days</h3>
+          <p class="note">Open roles by the employer's own posting date. Source: employer job boards.</p>
+          <div class="tablebox scroll"><table id="t-precent"><thead><tr><th>Company</th><th class="num">Posted in last 30 days</th><th class="num">Of those, Boston area</th><th class="num">All open, your lanes</th></tr></thead><tbody></tbody></table></div>
+        </div>
+        <div class="tsub">
+          <h3>H-1B filings for lane titles, by employer</h3>
+          <p class="note lca-note"></p>
+          <div class="tablebox scroll"><table id="t-lemplane"></table></div>
+        </div>
+      </div>
+      <div class="tsub">
+        <h3>H-1B filings, all job titles, by employer</h3>
+        <p class="note lca-note"></p>
+        <div class="tablebox scroll"><table id="t-lemp"></table></div>
+      </div>
+      <div class="tsub">
+        <h3>Open roles tracked per day</h3>
+        <p class="note" id="n-daily"></p>
+        <div class="chart" id="c-daily"></div>
+      </div>
+    </div>
+  </section>
+
+  <section aria-label="Summary"><div class="kpis" id="kpis"></div></section>
+
+  <section>
+    <h2>Roles to aim at</h2>
+    <p class="note">Open postings whose title matches one of your lanes. Roles at director level and above, entry level, outside the US, or with clearance, U.S.-person or no-sponsorship wording are already removed. These are keyword rules, so read the posting before relying on a tag.</p>
+    <div class="filters">
+      <label for="f-company">Company<select id="f-company"></select></label>
+      <label class="chk" for="f-new"><input type="checkbox" id="f-new"> New in the last 7 days only</label>
+      <span class="count" id="count"></span>
+    </div>
+    <div class="tablebox"><table id="roles"><thead><tr><th>Company</th><th>Role</th><th>Location</th><th>Lane</th><th class="num">Pay as posted</th><th>First seen</th></tr></thead><tbody></tbody></table></div>
+    <button class="more" id="more" type="button">Show 50 more</button>
+  </section>
+
+  <div class="grid2">
+    <section class="panel">
+      <h2>Who is hiring in your lanes</h2>
+      <p class="note">Open roles per company, sorted by Boston-area roles. Blue: Boston area. Grey: all other regions.</p>
+      <div class="chart" id="c-companies"></div>
+    </section>
+    <section class="panel">
+      <h2>What these occupations pay in Boston</h2>
+      <p class="note">Annual wage, Boston metro. Thin line: 10th to 90th percentile. Thick bar: 25th to 75th. Dot: median. Dashed line: your salary floor.</p>
+      <div class="chart" id="c-wages"></div>
+      <details><summary>Show data table</summary><div class="tablebox"><table id="t-wages"></table></div></details>
+    </section>
+  </div>
+
+  <section>
+    <h2>Massachusetts employers that file H-1B for titles in your lanes</h2>
+    <p class="note">Click a column heading to sort. Certified Labor Condition Applications (the form an employer files with the Department of Labor before an H-1B petition) with a Massachusetts worksite. A filing shows the employer has sponsored that kind of role. It is not proof of a current opening. "Not tracked" means that employer's job board is not in this database, so its openings are unknown here.</p>
+    <div class="tablebox"><table id="sponsors"><thead><tr><th>Employer</th><th class="num">Filings, lane titles</th><th class="num">Median offered wage, lane titles</th><th class="num">All certified filings</th><th class="num">Median offered wage, all</th><th class="num">Open roles now, your lanes</th></tr></thead><tbody></tbody></table></div>
+  </section>
+
+  <div class="grid2">
+    <section class="panel">
+      <h2>Boston metro unemployment rate</h2>
+      <p class="note">Percent of the labor force, monthly, not seasonally adjusted.</p>
+      <div class="chart" id="c-unemp"></div>
+      <details><summary>Show data table</summary><div class="tablebox"><table id="t-unemp"></table></div></details>
+    </section>
+    <section class="panel">
+      <h2>Massachusetts job openings and hires</h2>
+      <p class="note">Thousands per month, seasonally adjusted.</p>
+      <div class="legend" id="l-jolts"></div>
+      <div class="chart" id="c-jolts"></div>
+      <details><summary>Show data table</summary><div class="tablebox"><table id="t-jolts"></table></div></details>
+    </section>
+  </div>
+
+  <section class="panel">
+    <h2 id="h-ind">Jobs by industry, Boston metro, against a year earlier</h2>
+    <p class="note" id="n-ind"></p>
+    <div class="chart" id="c-ind"></div>
+  </section>
+
+  </div></details>
+
+  <footer id="foot"></footer>
+  <button type="button" id="ask-open" hidden>Ask Claude</button>
+  <div id="ask" role="dialog" aria-label="Ask Claude about this data" hidden>
+    <header><span>Ask Claude about this data</span><span><button type="button" id="ask-clear">New chat</button><button type="button" id="ask-close" aria-label="Close">Close ✕</button></span></header>
+    <div id="ask-log"></div>
+    <form id="ask-form"><textarea id="ask-box" rows="2" placeholder="Ask a question or give a task"></textarea><button type="submit" id="ask-send">Send</button></form>
+  </div>
+</div>
+
+<script>
+const D = __DASHBOARD_DATA__;
+const $ = s => document.querySelector(s);
+const el = (tag, attrs, text) => { const e = document.createElement(tag); if (attrs) for (const k in attrs) e.setAttribute(k, attrs[k]); if (text != null) e.textContent = text; return e; };
+const NS = "http://www.w3.org/2000/svg";
+const sv = (tag, attrs, text) => { const e = document.createElementNS(NS, tag); for (const k in attrs) e.setAttribute(k, attrs[k]); if (text != null) e.textContent = text; return e; };
+const fmt = n => n == null ? "" : Math.round(n).toLocaleString("en-US");
+const usd = n => n == null ? "" : "$" + Math.round(n).toLocaleString("en-US");
+const usdK = n => n == null ? "" : "$" + Math.round(n / 1000) + "K";
+const REGION = {boston_area:"Boston area", nyc:"New York", east_coast_other:"Other East Coast", remote:"Remote", us_other_or_unspecified:"Other US or unspecified"};
+const LANE = {deployment_strategy:"Deployment strategy", strategy_analytics:"Strategy and analytics", bizops:"Business operations", gtm_ops:"GTM operations", solutions:"Solutions", ai_enablement:"AI enablement", delivery_impl:"Delivery and implementation (adjacent)"};
+const MON = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+const ymLabel = s => MON[+s.slice(5, 7) - 1] + " " + s.slice(0, 4);
+
+$("#asof").textContent = "Postings as of " + D.asof + " · page built " + D.generated;
+
+/* ---------- KPI tiles */
+D.kpis.forEach(k => { const d = el("div", {class: "kpi"}); d.append(el("div", {class: "v"}, k.value), el("div", {class: "l"}, k.label), el("div", {class: "d"}, k.detail || "")); $("#kpis").append(d); });
+
+/* ---------- roles table */
+const R = D.roles.map(r => ({company:r[0], title:r[1], loc:r[2], region:r[3], lane:r[4], tier:r[5], cmin:r[6], cmax:r[7], below:r[8], posted:r[9], first:r[10], url:r[11], have:r[12] || [], other:r[13] || [], grp:r[14] || r[1]}));
+const regionOrder = ["boston_area","nyc","east_coast_other","remote","us_other_or_unspecified"];
+function fillSelect(id, opts, all) { const s = $(id); s.append(el("option", {value: ""}, all)); opts.forEach(([v, t]) => s.append(el("option", {value: v}, t))); }
+const cnt = (key) => R.reduce((m, r) => (m[r[key]] = (m[r[key]] || 0) + 1, m), {});
+const rc = cnt("region"), lc = cnt("lane"), cc = cnt("company");
+fillSelect("#f-region", regionOrder.filter(k => rc[k]).map(k => [k, REGION[k] + " (" + rc[k] + ")"]), "All regions");
+fillSelect("#f-lane", Object.keys(LANE).filter(k => lc[k]).map(k => [k, LANE[k] + " (" + lc[k] + ")"]), "All lanes");
+fillSelect("#f-company", Object.keys(cc).sort((a, b) => a.localeCompare(b)).map(k => [k, k + " (" + cc[k] + ")"]), "All companies");
+
+try { const s = JSON.parse(localStorage.getItem("radar-filters-v2") || "null"); if (s) { ["region","lane","company","q"].forEach(k => { if (s[k] != null && (k === "q" || [...$("#f-" + k).options].some(o => o.value === s[k]))) $("#f-" + k).value = s[k]; }); $("#f-floor").checked = !!s.floor; $("#f-new").checked = !!s.isnew; } } catch (e) {}
+let shown = 50;
+const weekAgo = new Date(new Date(D.asof + "T00:00:00").getTime() - 7 * 864e5).toISOString().slice(0, 10);
+function payText(r) { if (r.cmin == null && r.cmax == null) return ""; if (r.cmin != null && r.cmax != null && r.cmin !== r.cmax) return usdK(r.cmin) + " to " + usdK(r.cmax); return usdK(r.cmax != null ? r.cmax : r.cmin); }
+function renderRoles() {
+  const f = {region: $("#f-region").value, lane: $("#f-lane").value, company: $("#f-company").value, q: $("#f-q").value.trim().toLowerCase(), floor: $("#f-floor").checked, isnew: $("#f-new").checked};
+  try { localStorage.setItem("radar-filters-v2", JSON.stringify(f)); } catch (e) {}
+  const rows = R.filter(r => (!f.region || r.region === f.region) && (!f.lane || r.lane === f.lane) && (!f.company || r.company === f.company) &&
+    (!f.q || (r.company + " " + r.title + " " + r.loc).toLowerCase().includes(f.q)) && (!f.floor || r.below !== 1) && (!f.isnew || (D.history_days > 1 && r.first > weekAgo)));
+  const tb = $("#roles tbody"); tb.textContent = "";
+  rows.slice(0, shown).forEach(r => {
+    const tr = el("tr");
+    tr.append(el("td", null, r.company));
+    const t = el("td", {class: "t"}); const a = el("a", {href: r.url, target: "_blank", rel: "noopener"}, r.title); t.append(a);
+    if (D.history_days > 1 && r.first === D.asof) { t.append(" "); t.append(el("span", {class: "pill new"}, "New today")); }
+    tr.append(t);
+    tr.append(el("td", null, r.loc));
+    const l = el("td"); l.append(el("span", {class: "pill" + (r.tier === "target" ? " target" : "")}, (LANE[r.lane] || r.lane).replace(" (adjacent)", ""))); tr.append(l);
+    const p = el("td", {class: "num"}); const pt = payText(r);
+    if (pt) { p.append(pt); if (r.below === 1) { p.append(" "); p.append(el("span", {class: "pill low"}, "Below floor")); } } else p.append(el("span", {class: "muted"}, "not posted"));
+    tr.append(p);
+    tr.append(el("td", {class: "num"}, r.first));
+    tb.append(tr);
+  });
+  if (!rows.length) { const tr = el("tr"); tr.append(el("td", {colspan: "6", class: "muted"}, f.isnew && D.history_days <= 1 ? "The database started today, so there is no earlier day to compare against yet." : "No roles match these filters.")); tb.append(tr); }
+  $("#count").textContent = Math.min(shown, rows.length) + " of " + rows.length + " roles shown";
+  $("#more").hidden = rows.length <= shown;
+}
+["#f-region","#f-lane","#f-company","#f-floor","#f-new"].forEach(s => $(s).addEventListener("change", () => { shown = 50; renderRoles(); }));
+$("#f-q").addEventListener("input", () => { shown = 50; renderRoles(); });
+$("#more").addEventListener("click", () => { shown += 50; renderRoles(); });
+renderRoles();
+
+/* ---------- chart helpers */
+function tipFor(box) { const t = el("div", {class: "tip"}); t.hidden = true; box.append(t);
+  return { show(x, y, parts) { t.textContent = ""; parts.forEach((p, i) => { if (i) t.append(el("br")); if (p[0] != null) t.append(el("b", null, p[0]), " "); t.append(p[1]); }); t.hidden = false;
+      const w = box.clientWidth; t.style.left = Math.max(70, Math.min(w - 70, x)) + "px"; t.style.top = y + "px"; }, hide() { t.hidden = true; } }; }
+function scaleX(svg, box, evt) { const r = svg.getBoundingClientRect(); return (evt.clientX - r.left) * (svg.viewBox.baseVal.width / r.width); }
+function niceMax(v) { const p = Math.pow(10, Math.floor(Math.log10(v))); const m = v / p; return (m <= 1 ? 1 : m <= 2 ? 2 : m <= 2.5 ? 2.5 : m <= 5 ? 5 : 10) * p; }
+function simpleTable(id, head, rows) { const t = $(id); const thead = el("thead"), tr = el("tr"); head.forEach((h, i) => tr.append(el("th", i ? {class: "num"} : null, h))); thead.append(tr); const tb = el("tbody");
+  rows.forEach(r => { const x = el("tr"); r.forEach((c, i) => x.append(el("td", i ? {class: "num"} : null, c == null ? "" : String(c)))); tb.append(x); }); t.append(thead, tb); }
+function empty(box, msg) { box.append(el("p", {class: "muted"}, msg)); }
+
+/* ---------- companies: stacked horizontal bars */
+const G = {score: []};
+function drawCompanies(data) {
+  const box = $("#c-companies"); box.textContent = "";
+  if (!data.length) return empty(box, "No roles match the filters.");
+  const W = 520, rowH = 24, left = 150, right = 44, H = data.length * rowH + 8;
+  const max = niceMax(Math.max(...data.map(d => d.total)));
+  const x = v => left + (W - left - right) * v / max;
+  const svg = sv("svg", {viewBox: "0 0 " + W + " " + H, role: "img", "aria-label": "Open roles in your lanes by company"});
+  const tip = tipFor(box);
+  data.forEach((d, i) => {
+    const y = i * rowH + 4, g = sv("g", {tabindex: "0"});
+    g.append(sv("text", {x: left - 8, y: y + 13, "text-anchor": "end"}, d.company.length > 22 ? d.company.slice(0, 21) + "…" : d.company));
+    const wb = x(d.boston) - left, wo = x(d.total) - x(d.boston);
+    if (d.boston) g.append(sv("rect", {x: left, y: y + 2, width: Math.max(wb, 2), height: 14, fill: "var(--s1)", rx: 2}));
+    if (d.total - d.boston) g.append(sv("rect", {x: left + (d.boston ? wb + 2 : 0), y: y + 2, width: Math.max(wo - (d.boston ? 2 : 0), 2), height: 14, fill: "var(--mid)", rx: 2}));
+    g.append(sv("text", {x: x(d.total) + 6, y: y + 13, class: "v"}, d.total));
+    g.append(sv("rect", {x: 0, y: y, width: W, height: rowH - 2, fill: "transparent"}));
+    const show = () => tip.show(box.clientWidth / 2, (y / H) * box.clientHeight, [[null, d.company], [d.boston, "in the Boston area"], [d.total - d.boston, "in other regions"]]);
+    g.addEventListener("pointermove", show); g.addEventListener("focus", show); g.addEventListener("pointerleave", tip.hide); g.addEventListener("blur", tip.hide);
+    svg.append(g);
+  });
+  box.append(svg);
+}
+drawCompanies(D.companies.slice(0, 15));
+
+/* ---------- wages: percentile ranges */
+(function () {
+  const box = $("#c-wages"), data = D.wages.filter(d => d.med != null);
+  if (!data.length) return empty(box, "Wage data not loaded.");
+  const W = 520, rowH = 30, left = 190, right = 16, top = 18, H = top + data.length * rowH + 22;
+  const max = niceMax(Math.max(D.salary_floor, ...data.map(d => d.p90 || d.p75 || d.med)));
+  const x = v => left + (W - left - right) * v / max;
+  const svg = sv("svg", {viewBox: "0 0 " + W + " " + H, role: "img", "aria-label": "Annual wage percentiles by occupation, Boston metro"});
+  const tip = tipFor(box);
+  for (let i = 0; i <= 4; i++) { const v = max * i / 4; svg.append(sv("line", {x1: x(v), x2: x(v), y1: top, y2: H - 20, stroke: "var(--line2)", "stroke-width": 1})); svg.append(sv("text", {x: x(v), y: H - 6, "text-anchor": i === 4 ? "end" : i ? "middle" : "start"}, usdK(v))); }
+  svg.append(sv("line", {x1: x(D.salary_floor), x2: x(D.salary_floor), y1: top - 4, y2: H - 20, stroke: "var(--ink2)", "stroke-width": 1, "stroke-dasharray": "3 3"}));
+  svg.append(sv("text", {x: x(D.salary_floor), y: 9, "text-anchor": "middle"}, "Floor " + usdK(D.salary_floor)));
+  data.forEach((d, i) => {
+    const y = top + i * rowH + rowH / 2, g = sv("g", {tabindex: "0"});
+    g.append(sv("text", {x: left - 10, y: y + 4, "text-anchor": "end"}, d.name.length > 30 ? d.name.slice(0, 29) + "…" : d.name));
+    if (d.p10 != null && d.p90 != null) g.append(sv("line", {x1: x(d.p10), x2: x(d.p90), y1: y, y2: y, stroke: "var(--s1)", "stroke-width": 2, "stroke-linecap": "round"}));
+    if (d.p25 != null && d.p75 != null) g.append(sv("rect", {x: x(d.p25), y: y - 5, width: x(d.p75) - x(d.p25), height: 10, fill: "var(--s1)", rx: 3, opacity: .55}));
+    g.append(sv("circle", {cx: x(d.med), cy: y, r: 5, fill: "var(--s1)", stroke: "var(--surface)", "stroke-width": 2}));
+    g.append(sv("rect", {x: 0, y: y - rowH / 2, width: W, height: rowH, fill: "transparent"}));
+    const show = () => tip.show(box.clientWidth / 2, ((y - 10) / H) * box.clientHeight, [[null, d.name + " (" + d.soc + ")"], [usd(d.med), "median"], [usd(d.p25) + " to " + usd(d.p75), "middle half"], [d.p90 != null ? usd(d.p10) + " to " + usd(d.p90) : "not published", "10th to 90th"], [fmt(d.emp), "employed in Boston metro"]]);
+    g.addEventListener("pointermove", show); g.addEventListener("focus", show); g.addEventListener("pointerleave", tip.hide); g.addEventListener("blur", tip.hide);
+    svg.append(g);
+  });
+  box.append(svg);
+  simpleTable("#t-wages", ["Occupation", "Employed", "10th", "25th", "Median", "75th", "90th"], data.map(d => [d.name, fmt(d.emp), usd(d.p10), usd(d.p25), usd(d.med), usd(d.p75), usd(d.p90)]));
+})();
+
+/* ---------- line charts */
+function lineChart(boxId, series, opts) {
+  const box = $(boxId); const pts = series[0].data;
+  if (!pts.length) return empty(box, "Data not loaded.");
+  const W = 520, H = 230, L = 38, Rr = 54, T = 10, B = 24;
+  const all = series.flatMap(s => s.data.map(p => p[1]));
+  const max = niceMax(Math.max(...all)), min = 0, n = pts.length;
+  const x = i => L + (W - L - Rr) * i / (n - 1), y = v => T + (H - T - B) * (1 - (v - min) / (max - min));
+  const svg = sv("svg", {viewBox: "0 0 " + W + " " + H, role: "img", "aria-label": opts.label});
+  for (let i = 0; i <= 4; i++) { const v = max * i / 4; svg.append(sv("line", {x1: L, x2: W - Rr, y1: y(v), y2: y(v), stroke: "var(--line2)", "stroke-width": 1})); svg.append(sv("text", {x: L - 6, y: y(v) + 4, "text-anchor": "end"}, opts.tick(v))); }
+  let lastYear = "";
+  pts.forEach((p, i) => { const yr = p[0].slice(0, 4); if (p[0].slice(5, 7) === "01" && yr !== lastYear && (+yr % 2 === 0)) { lastYear = yr; svg.append(sv("text", {x: x(i), y: H - 6, "text-anchor": "middle"}, yr)); svg.append(sv("line", {x1: x(i), x2: x(i), y1: H - B, y2: H - B + 4, stroke: "var(--line)", "stroke-width": 1})); } });
+  const ends = [];
+  series.forEach(s => { let d = ""; s.data.forEach((p, i) => { d += (i ? "L" : "M") + x(i).toFixed(1) + " " + y(p[1]).toFixed(1); });
+    svg.append(sv("path", {d, fill: "none", stroke: s.color, "stroke-width": 2, "stroke-linejoin": "round", "stroke-linecap": "round"}));
+    const lp = s.data[n - 1]; svg.append(sv("circle", {cx: x(n - 1), cy: y(lp[1]), r: 4, fill: s.color, stroke: "var(--surface)", "stroke-width": 2})); ends.push({y: y(lp[1]), t: opts.val(lp[1])}); });
+  ends.sort((a, b) => a.y - b.y); for (let i = 1; i < ends.length; i++) if (ends[i].y - ends[i - 1].y < 13) ends[i].y = ends[i - 1].y + 13;
+  ends.forEach(e => svg.append(sv("text", {x: x(n - 1) + 8, y: e.y + 4, class: "v"}, e.t)));
+  const hair = sv("line", {y1: T, y2: H - B, stroke: "var(--ink3)", "stroke-width": 1, visibility: "hidden"}); svg.append(hair);
+  const dots = series.map(s => { const c = sv("circle", {r: 4, fill: s.color, stroke: "var(--surface)", "stroke-width": 2, visibility: "hidden"}); svg.append(c); return c; });
+  const tip = tipFor(box);
+  const hit = sv("rect", {x: L, y: T, width: W - L - Rr, height: H - T - B, fill: "transparent"}); svg.append(hit);
+  hit.addEventListener("pointermove", e => { const px = scaleX(svg, box, e); const i = Math.max(0, Math.min(n - 1, Math.round((px - L) / (W - L - Rr) * (n - 1))));
+    hair.setAttribute("x1", x(i)); hair.setAttribute("x2", x(i)); hair.setAttribute("visibility", "visible");
+    series.forEach((s, k) => { dots[k].setAttribute("cx", x(i)); dots[k].setAttribute("cy", y(s.data[i][1])); dots[k].setAttribute("visibility", "visible"); });
+    tip.show(x(i) / W * box.clientWidth, Math.min(...series.map(s => y(s.data[i][1]))) / H * box.clientHeight, [[null, ymLabel(pts[i][0])]].concat(series.map(s => [opts.val(s.data[i][1]), s.name]))); });
+  hit.addEventListener("pointerleave", () => { tip.hide(); hair.setAttribute("visibility", "hidden"); dots.forEach(c => c.setAttribute("visibility", "hidden")); });
+  box.append(svg);
+}
+lineChart("#c-unemp", [{name: "unemployment rate", color: "var(--s1)", data: D.unemp}], {label: "Boston metro unemployment rate by month", tick: v => v + "%", val: v => v.toFixed(1) + "%"});
+simpleTable("#t-unemp", ["Month", "Unemployment rate %"], D.unemp.slice().reverse().map(p => [ymLabel(p[0]), p[1].toFixed(1)]));
+(function () {
+  if (!D.jolts.length) return empty($("#c-jolts"), "Data not loaded.");
+  const s = [{name: "Job openings", color: "var(--s1)", data: D.jolts.map(r => [r[0], r[1]])}, {name: "Hires", color: "var(--s2)", data: D.jolts.map(r => [r[0], r[2]])}];
+  s.forEach(x => { const sp = el("span"); const i = el("i"); i.style.background = x.color; sp.append(i, x.name); $("#l-jolts").append(sp); });
+  lineChart("#c-jolts", s, {label: "Massachusetts job openings and hires by month", tick: v => fmt(v) + "K", val: v => fmt(v) + "K"});
+  simpleTable("#t-jolts", ["Month", "Job openings (thousands)", "Hires (thousands)"], D.jolts.slice().reverse().map(r => [ymLabel(r[0]), r[1], r[2]]));
+})();
+
+/* ---------- industry change: diverging bars */
+(function () {
+  const box = $("#c-ind"), data = D.industry.rows;
+  if (!data.length) return empty(box, "Data not loaded.");
+  $("#n-ind").textContent = "Change in jobs, " + D.industry.month + " against the same month a year earlier, percent. Hover or focus a bar for the job counts.";
+  const W = 760, rowH = 24, left = 250, right = 60, H = data.length * rowH + 8;
+  const m = niceMax(Math.max(...data.map(d => Math.abs(d.pct)))), zero = left + (W - left - right) / 2, half = (W - left - right) / 2;
+  const svg = sv("svg", {viewBox: "0 0 " + W + " " + H, role: "img", "aria-label": "Year over year change in jobs by industry, Boston metro"});
+  svg.append(sv("line", {x1: zero, x2: zero, y1: 0, y2: H, stroke: "var(--line)", "stroke-width": 1}));
+  const tip = tipFor(box);
+  data.forEach((d, i) => {
+    const y = i * rowH + 4, w = Math.max(half * Math.abs(d.pct) / m, 1.5), g = sv("g", {tabindex: "0"});
+    g.append(sv("text", {x: left - 10, y: y + 13, "text-anchor": "end"}, d.name.length > 40 ? d.name.slice(0, 39) + "…" : d.name));
+    g.append(sv("rect", {x: d.pct >= 0 ? zero + 1 : zero - 1 - w, y: y + 2, width: w, height: 14, fill: d.pct >= 0 ? "var(--s1)" : "var(--neg)", rx: 2}));
+    g.append(sv("text", {x: d.pct >= 0 ? zero + w + 7 : zero - w - 7, y: y + 13, class: "v", "text-anchor": d.pct >= 0 ? "start" : "end"}, (d.pct > 0 ? "+" : "") + d.pct.toFixed(1) + "%"));
+    g.append(sv("rect", {x: 0, y: y, width: W, height: rowH - 2, fill: "transparent"}));
+    const show = () => tip.show(box.clientWidth / 2, (y / H) * box.clientHeight, [[null, d.name], [fmt(d.now * 1000), "jobs in " + D.industry.month], [fmt(d.prev * 1000), "a year earlier"], [(d.pct > 0 ? "+" : "") + d.pct.toFixed(1) + "%", "change"]]);
+    g.addEventListener("pointermove", show); g.addEventListener("focus", show); g.addEventListener("pointerleave", tip.hide); g.addEventListener("blur", tip.hide);
+    svg.append(g);
+  });
+  box.append(svg);
+})();
+
+
+/* ---------- trends */
+(function () {
+  const T = D.trends; if (!T) return;
+  const pc = v => { const td = el("td", {class: "num"}); if (v == null) { td.append(el("span", {class: "muted"}, "n/a")); return td; } td.append(el("span", {class: v > 0 ? "up" : v < 0 ? "down" : ""}, (v > 0 ? "+" : "") + v.toFixed(1) + "%")); return td; };
+  const delta = v => { const td = el("td", {class: "num"}); if (v == null) { td.append(el("span", {class: "muted"}, "n/a")); return td; } td.append(el("span", {class: v > 0 ? "up" : v < 0 ? "down" : ""}, (v > 0 ? "+" : "") + fmt(v))); return td; };
+  const numTd = (v, f) => el("td", {class: "num"}, v == null ? "" : (f ? f(v) : fmt(v)));
+  function spark(arr) { const td = el("td", {class: "sp"}); if (!arr || arr.length < 2) return td; const W = 88, H = 24, mn = Math.min(...arr), mx = Math.max(...arr), r = mx - mn || 1;
+    const X = i => 3 + (W - 8) * i / (arr.length - 1), Y = v => 3 + (H - 6) * (1 - (v - mn) / r);
+    const svg = sv("svg", {viewBox: "0 0 " + W + " " + H, role: "img", "aria-label": "trend from " + arr[0] + " to " + arr[arr.length - 1]});
+    svg.append(sv("path", {d: arr.map((v, i) => (i ? "L" : "M") + X(i).toFixed(1) + " " + Y(v).toFixed(1)).join(""), fill: "none", stroke: "var(--s1)", "stroke-width": 1.5, "stroke-linejoin": "round"}));
+    svg.append(sv("circle", {cx: X(arr.length - 1), cy: Y(arr[arr.length - 1]), r: 2.5, fill: "var(--s1)"})); td.append(svg); return td; }
+  const none = (id, n, msg) => { const tr = el("tr"); tr.append(el("td", {colspan: String(n), class: "muted"}, msg)); ($(id + " tbody") || $(id)).append(tr); };
+
+  /* industry x lane cross-reference */
+  (function () {
+    const Lc = T.lca, Sc = T.scorecard, t = $("#t-cross");
+    if (!Lc || !Lc.lane_rows || !Sc) { t.append(el("tbody")); return none("#t-cross", 1, "H-1B filing data not loaded."); }
+    const lanes = Object.keys(LANE), last4 = new Set(Lc.quarters.slice(-4)), m = {}, w = {};
+    Lc.lane_rows.forEach(r => { if (!last4.has(r[3])) return; const a = m[r[1]] || (m[r[1]] = {}); a[r[2]] = (a[r[2]] || 0) + 1; if (r[4]) (w[r[1]] || (w[r[1]] = [])).push(r[4]); });
+    const med = a => { if (!a || a.length < 5) return null; const b = a.slice().sort((x, y) => x - y), k = b.length >> 1; return b.length % 2 ? b[k] : Math.round((b[k - 1] + b[k]) / 2); };
+    const mx = Math.max(1, ...Object.values(m).flatMap(a => Object.values(a)));
+    const head = el("tr"); head.append(el("th", null, "Industry"), el("th", {class: "num"}, "Boston jobs, 1 year"), el("th", {class: "num"}, "US openings, change in points"));
+    lanes.forEach(l => head.append(el("th", {class: "num"}, LANE[l].replace(" (adjacent)", "")))); head.append(el("th", {class: "num"}, "All your lanes"), el("th", {class: "num"}, "Median offered wage, your lanes"));
+    const thead = el("thead"); thead.append(head); const tb = el("tbody");
+    Sc.rows.map(r => ({r, a: m[r.name] || {}})).map(x => (x.tot = Object.values(x.a).reduce((p, q) => p + q, 0), x)).sort((x, y) => y.tot - x.tot).forEach(x => {
+      const tr = el("tr"), ch = el("td", {class: "num"}); if (x.r.jo_chg != null) ch.append(el("span", {class: x.r.jo_chg > 0 ? "up" : x.r.jo_chg < 0 ? "down" : ""}, (x.r.jo_chg > 0 ? "+" : "") + x.r.jo_chg.toFixed(1)));
+      tr.append(el("td", null, x.r.name), pc(x.r.epct), ch);
+      lanes.forEach(l => { const v = x.a[l] || 0, td = el("td", {class: "num heat"}, v ? String(v) : ""); if (v) td.style.background = "color-mix(in srgb, var(--s1) " + Math.round(8 + 42 * Math.sqrt(v / mx)) + "%, transparent)"; tr.append(td); });
+      tr.append(numTd(x.tot), numTd(med(w[x.r.name]), usd)); tb.append(tr); });
+    t.append(thead, tb);
+    $("#n-cross").textContent = "Each cell: certified H-1B filings with a Massachusetts worksite, " + Lc.quarters.slice(-4)[0] + " to " + Lc.quarters[Lc.quarters.length - 1] + ", whose job title matches that lane, by the employer's industry. Darker = more filings. Growth columns are the same figures as the scorecard. Fit here means employers in that industry filed for titles like yours; it does not measure your odds. Live postings are not split by industry because job boards do not state the employer's industry.";
+  })();
+
+  /* scorecard */
+  const S = T.scorecard;
+  if (S && S.rows.length) {
+    $("#n-score").textContent = "One row per industry, all sectors. H-1B columns: certified filings with a Massachusetts worksite, " + S.lca_span + " (median wage shown when there are at least 5 filings). Boston jobs and their 1-year change: " + (S.ces_month ? ymLabel(S.ces_month) : "") + " against the same month a year earlier, the same BLS CES figures as the Jobs by industry table (finance and real estate share one figure; construction includes mining and logging). Weekly wage: Boston metro private employers, " + S.quarter + ", against a year earlier (BLS QCEW). Openings rate: United States, " + (S.jolts_month ? ymLabel(S.jolts_month) : "") + ", against a year earlier (professional, management and administrative services share one national figure). The US openings rate covers every occupation in that industry across the country (factory, clinical and retail jobs included); it is background only and is not part of the rank. Open roles now: live postings in your lanes at tracked companies whose own H-1B filings state that industry. Average rank is the mean of the industry's rank on five columns (filings in your lanes, lane wage, weekly wage, 1-year job change, open roles now in your lanes); 1 is best. It weights the five equally and is a sorting aid, not a verdict.";
+    const one = v => v == null ? "" : v.toFixed(1) + "%";
+    S.rows.forEach(r => { const tr = el("tr"); const ch = el("td", {class: "num"}); if (r.jo_chg != null) ch.append(el("span", {class: r.jo_chg > 0 ? "up" : r.jo_chg < 0 ? "down" : ""}, (r.jo_chg > 0 ? "+" : "") + r.jo_chg.toFixed(1)));
+      const ar = el("td", {class: "num"}); if (r.avg_rank == null) ar.append(el("span", {class: "muted"}, "n/a")); else ar.textContent = r.avg_rank.toFixed(1);
+      const c1 = numTd(r.lca_lane || 0), c2 = numTd(r.lane_wage, usd), c3 = numTd(0), c4 = numTd(0); G.score.push({r, ar, c1, c2, c3, c4});
+      tr.append(el("td", null, r.name), ar, c1, c2, numTd(r.lca_all || 0), c3, c4, numTd(r.emp), pc(r.epct), numTd(r.wage, usd), pc(r.wpct), numTd(r.jo, one), ch); $("#t-score tbody").append(tr); });
+  } else none("#t-score", 13, "Scorecard data not loaded.");
+
+  /* industries */
+  const I = T.industries;
+  if (I.rows.length) { $("#h-tind").textContent = "Jobs by industry, Boston metro, " + ymLabel(I.month);
+    I.rows.filter(r => !r.agg).forEach(r => { const tr = el("tr", {class: r.sub ? "subrow" : ""}); tr.append(el("td", null, r.name), spark(r.spark), numTd(r.now * 1000), delta(r.d1), pc(r.y1), pc(r.y3), pc(r.y2019)); $("#t-ind tbody").append(tr); });
+  } else none("#t-ind", 7, "Industry data not loaded.");
+  const det = T.detail.rows;
+  if (det.length) { $("#h-grow").textContent = "Detailed industries growing fastest, " + T.detail.quarter;
+    const row = r => { const tr = el("tr"); tr.append(el("td", null, r.name), numTd(r.emp), pc(r.epct), numTd(r.wage, usd), pc(r.wpct)); return tr; };
+    det.filter(r => r.epct > 0).slice(0, 15).forEach(r => $("#t-grow tbody").append(row(r)));
+    det.filter(r => r.epct < 0).slice(-15).reverse().forEach(r => $("#t-shrink tbody").append(row(r)));
+  } else { none("#t-grow", 5, "Detailed industry data not loaded."); none("#t-shrink", 5, "Detailed industry data not loaded."); }
+  const J = T.jolts;
+  if (J.rows.length) { $("#h-jolts").textContent = "Hiring demand by industry, United States, " + ymLabel(J.month);
+    const one = v => v == null ? "" : v.toFixed(1) + "%";
+    J.rows.forEach(r => { const tr = el("tr"); const ch = el("td", {class: "num"}); if (r.chg != null) ch.append(el("span", {class: r.chg > 0 ? "up" : r.chg < 0 ? "down" : ""}, (r.chg > 0 ? "+" : "") + r.chg.toFixed(1)));
+      tr.append(el("td", null, r.name), spark(r.spark), numTd(r.jo, one), numTd(r.jo_prev, one), ch, numTd(r.hi, one), numTd(r.qu, one), numTd(r.ld, one)); $("#t-jol tbody").append(tr); });
+  } else none("#t-jol", 8, "Openings data not loaded.");
+
+  /* H-1B filings by quarter */
+  const L = T.lca;
+  G.numTd = numTd; G.spark = spark;
+  function lcaTable(id, rows, first, nameMap) {
+    const t = $(id); t.textContent = ""; if (!L || !rows || !rows.length) { t.append(el("tbody")); none(id, 1, L ? "No filings match the filters." : "H-1B filing data not loaded."); return; }
+    const qs = L.quarters, yoy = qs.length >= 8, head = el("tr"); head.append(el("th", null, first), el("th", null, "By quarter"));
+    const shown = yoy ? [] : qs.slice(-7);
+    if (yoy) ["Last 4 quarters", "4 quarters before", "Change, filings", "Change, %"].forEach(h => head.append(el("th", {class: "num"}, h))); else { shown.forEach(h => head.append(el("th", {class: "num"}, h))); head.append(el("th", {class: "num"}, "Total")); }
+    const thead = el("thead"); thead.append(head); const tb = el("tbody");
+    rows.forEach(r => { const tr = el("tr"); tr.append(el("td", null, nameMap ? (nameMap[r.name] || r.name) : r.name), spark(r.c));
+      if (yoy) { const a = r.c.slice(-4).reduce((x, y) => x + y, 0), b = r.c.slice(-8, -4).reduce((x, y) => x + y, 0); tr.append(numTd(a), numTd(b), delta(a - b), b ? pc(Math.round(1000 * (a - b) / b) / 10) : pc(null)); }
+      else { r.c.slice(-7).forEach(v => tr.append(numTd(v))); tr.append(numTd(r.c.slice(-7).reduce((x, y) => x + y, 0))); } tb.append(tr); });
+    t.append(thead, tb);
+  }
+  const lcaNote = !L ? "H-1B filing data not loaded." : L.quarters.length >= 8
+    ? "Certified filings with a Massachusetts worksite, " + L.quarters[0] + " to " + L.quarters[L.quarters.length - 1] + ". Change compares the last 4 quarters with the 4 before. Source: US Department of Labor."
+    : "Certified filings with a Massachusetts worksite. Only " + L.quarters.length + " quarters are loaded, so there is no year-over-year change yet; spring quarters typically run higher because of the annual H-1B filing season. Source: US Department of Labor.";
+  document.querySelectorAll(".lca-note").forEach(n => n.textContent = lcaNote);
+  G.lcaTable = lcaTable;
+  lcaTable("#t-lsector", L && L.sector, "Industry of the employer");
+  lcaTable("#t-llane", L && L.lane, "Lane", LANE);
+  lcaTable("#t-lsoc", L && L.soc, "Occupation");
+  lcaTable("#t-lemplane", L && L.employer_lane, "Employer");
+  lcaTable("#t-lemp", L && L.employer, "Employer");
+
+  /* postings by month posted, by lane */
+  (function () { const P = T.post_months, t = $("#t-pmonth"); if (!P.rows.length) { t.append(el("tbody")); return none("#t-pmonth", 1, "No postings loaded."); }
+    const ms = P.months.slice(-6), off = P.months.length - ms.length, head = el("tr"); head.append(el("th", null, "Lane")); ms.forEach(m => head.append(el("th", {class: "num"}, MON[+m.slice(5) - 1] + " " + m.slice(2, 4))));
+    const thead = el("thead"); thead.append(head); const tb = el("tbody");
+    P.rows.forEach(r => { const tr = el("tr"); tr.append(el("td", null, LANE[r.name] || r.name)); r.c.slice(off).forEach(v => tr.append(numTd(v))); tb.append(tr); }); t.append(thead, tb); })();
+  T.post_recent.forEach(r => { const tr = el("tr"); tr.append(el("td", null, r.company), numTd(r.recent), numTd(r.recent_boston), numTd(r.open)); $("#t-precent tbody").append(tr); });
+  if (!T.post_recent.length) none("#t-precent", 4, "No postings dated in the last 30 days.");
+
+  /* daily tracking */
+  const dd = T.daily;
+  if (dd.length >= 5) { $("#n-daily").textContent = "Open roles in your lanes on each day the collector ran, across all tracked companies.";
+    const box = $("#c-daily"), W = 760, H = 180, Lm = 44, R = 50, Tm = 10, B = 24, vals = dd.map(d => d[2]), mx = niceMax(Math.max(...vals)), n = dd.length;
+    const x = i => Lm + (W - Lm - R) * i / (n - 1), y = v => Tm + (H - Tm - B) * (1 - v / mx), svg = sv("svg", {viewBox: "0 0 " + W + " " + H, role: "img", "aria-label": "Open roles in your lanes per day"});
+    for (let i = 0; i <= 4; i++) { const v = mx * i / 4; svg.append(sv("line", {x1: Lm, x2: W - R, y1: y(v), y2: y(v), stroke: "var(--line2)", "stroke-width": 1})); svg.append(sv("text", {x: Lm - 6, y: y(v) + 4, "text-anchor": "end"}, fmt(v))); }
+    svg.append(sv("path", {d: vals.map((v, i) => (i ? "L" : "M") + x(i).toFixed(1) + " " + y(v).toFixed(1)).join(""), fill: "none", stroke: "var(--s1)", "stroke-width": 2}));
+    svg.append(sv("text", {x: Lm, y: H - 6}, dd[0][0])); svg.append(sv("text", {x: W - R, y: H - 6, "text-anchor": "end"}, dd[n - 1][0])); svg.append(sv("text", {x: x(n - 1) + 8, y: y(vals[n - 1]) + 4, class: "v"}, fmt(vals[n - 1])));
+    const tip = tipFor(box), hit = sv("rect", {x: Lm, y: Tm, width: W - Lm - R, height: H - Tm - B, fill: "transparent"}); svg.append(hit);
+    hit.addEventListener("pointermove", e => { const i = Math.max(0, Math.min(n - 1, Math.round((scaleX(svg, box, e) - Lm) / (W - Lm - R) * (n - 1)))); tip.show(x(i) / W * box.clientWidth, y(vals[i]) / H * box.clientHeight, [[null, dd[i][0]], [fmt(vals[i]), "open roles in your lanes"], [fmt(dd[i][1]), "open roles, all titles"]]); });
+    hit.addEventListener("pointerleave", tip.hide); box.append(svg);
+  } else $("#n-daily").textContent = "The collector has " + dd.length + " day(s) of history" + (dd.length ? " (" + dd.map(d => d[0] + ": " + fmt(d[2]) + " in your lanes, " + fmt(d[1]) + " in total").join("; ") + ")" : "") + ". A chart appears here after 5 days.";
+})();
+
+/* ---------- sponsors and sources tables */
+D.sponsors.forEach(s => { const tr = el("tr"); tr.append(el("td", null, s[0]), el("td", {class: "num"}, fmt(s[1])), el("td", {class: "num"}, usd(s[2])), el("td", {class: "num"}, fmt(s[3])), el("td", {class: "num"}, usd(s[4]))); $("#sponsors tbody").append(tr); });
+if (!D.sponsors.length) { const tr = el("tr"); tr.append(el("td", {colspan: "5", class: "muted"}, "H-1B filing data not loaded.")); $("#sponsors tbody").append(tr); }
+
+
+/* ---------- hide an industry: one click removes it from every industry table; remembered in this browser */
+(function () {
+  const KEY = "radar-hidden-industries", tables = ["#t-cross", "#t-score", "#t-ind", "#t-grow", "#t-shrink", "#t-jol", "#t-lsector"];
+  let hidden = new Set();
+  try { hidden = new Set(JSON.parse(localStorage.getItem(KEY) || "[]")); } catch (e) {}
+  const save = () => { try { localStorage.setItem(KEY, JSON.stringify([...hidden])); } catch (e) {} };
+  const rows = [], labels = {};
+  tables.forEach(id => { const t = $(id); if (!t || !t.tBodies[0]) return; [...t.tBodies[0].rows].forEach(tr => { const c = tr.cells[0]; if (!c || tr.cells.length < 2) return; const name = c.textContent.trim().replace(/\s+/g, " "); tr.dataset.ind = name; tr.dataset.key = name.toLowerCase().replace(/[^a-z]/g, "");
+    const b = el("button", {class: "hide", type: "button", "aria-label": "Hide " + name, title: "Hide " + name}, "×"); b.addEventListener("click", () => { hidden.add(tr.dataset.key); labels[tr.dataset.key] = name; save(); apply(); }); labels[tr.dataset.key] = labels[tr.dataset.key] || name; c.append(b); rows.push(tr); }); });
+  function apply() {
+    rows.forEach(tr => { tr.hidden = hidden.has(tr.dataset.key); });
+    if (G.onHide) G.onHide();
+    const bar = $("#hidden-bar"); bar.textContent = ""; bar.hidden = hidden.size === 0; if (!hidden.size) return;
+    bar.append("Hidden (click a name to bring it back):");
+    [...hidden].sort().forEach(n => { const b = el("button", {type: "button", title: "Show again"}, (labels[n] || n) + " +"); b.addEventListener("click", () => { hidden.delete(n); save(); apply(); }); bar.append(b); });
+    const all = el("button", {type: "button", class: "all"}, "Show all"); all.addEventListener("click", () => { hidden.clear(); save(); apply(); }); bar.append(all);
+  }
+  apply();
+  /* Cmd+Z / Ctrl+Z brings back the most recently hidden industry */
+  document.addEventListener("keydown", e => { if ((e.metaKey || e.ctrlKey) && !e.shiftKey && e.key.toLowerCase() === "z" && hidden.size && !/^(INPUT|TEXTAREA|SELECT)$/.test((e.target.tagName || ""))) { e.preventDefault(); const last = [...hidden].pop(); hidden.delete(last); save(); apply(); } });
+})();
+/* ---------- click-to-sort on trend tables */
+function sortable(t) {
+  const ths = t.querySelectorAll("thead th");
+  ths.forEach((th, i) => {
+    if (/since 2015|by quarter/i.test(th.textContent)) return;
+    th.classList.add("sortable"); th.tabIndex = 0; th.setAttribute("role", "button"); th.title = "Sort by this column";
+    const numeric = th.classList.contains("num");
+    const key = td => { const x = td ? td.textContent : ""; if (!numeric) return (td && td.parentNode.dataset.ind ? td.parentNode.dataset.ind : x).toLowerCase(); const n = parseFloat(x.replace(/[^0-9.\-]/g, "")); return isNaN(n) ? null : n; };
+    const go = () => {
+      const dir = th.getAttribute("aria-sort") === "descending" ? "ascending" : (th.getAttribute("aria-sort") === "ascending" ? "descending" : (numeric ? "descending" : "ascending"));
+      ths.forEach(h => h.removeAttribute("aria-sort")); th.setAttribute("aria-sort", dir);
+      const tb = t.tBodies[0], rows = [...tb.rows], m = dir === "ascending" ? 1 : -1;
+      rows.sort((a, b) => { const x = key(a.cells[i]), y = key(b.cells[i]); if (x === null && y === null) return 0; if (x === null) return 1; if (y === null) return -1; return numeric ? m * (x - y) : m * x.localeCompare(y); });
+      rows.forEach(r => tb.append(r));
+    };
+    th.addEventListener("click", go);
+    th.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); go(); } });
+  });
+}
+document.querySelectorAll("#trends table, #sponsors").forEach(sortable);
+/* notes in the trends section fold away behind a one-word toggle */
+document.querySelectorAll("#trends .tsub > p.note").forEach(pn => { if (!pn.textContent.trim()) { pn.remove(); return; } const d = el("details"), sm = el("summary", null, "About this data"); pn.replaceWith(d); d.append(sm, pn); });
+$("#foot").textContent = "Not collected: LinkedIn, Indeed and Glassdoor postings, career sites that are not on Greenhouse, Lever, Ashby or a listed Workday site, and company financial reports. " + D.history_days + " day(s) of posting history so far; counts of new and closed roles become meaningful after a few weeks. Lane, region and exclusion tags are keyword rules applied to the posting text.";
+
+/* ---------- page-wide filters: lane, region and pay floor recompute every table built from postings or
+   lane-level H-1B filings; search hides non-matching rows in every table */
+(function () {
+  const T = D.trends || {}, L = T.lca, S = T.scorecard, numTd = G.numTd || ((v) => el("td", {class: "num"}, v == null ? "" : fmt(v)));
+  const median = a => { if (!a.length) return null; const b = a.slice().sort((x, y) => x - y), m = b.length >> 1; return b.length % 2 ? b[m] : Math.round((b[m - 1] + b[m]) / 2); };
+  const cut30 = new Date(new Date(D.asof + "T00:00:00").getTime() - 30 * 864e5).toISOString().slice(0, 10);
+  const months = (T.post_months ? T.post_months.months : []).slice(-6);
+  function drawFit(pts, lane) {
+    const box = $("#c-fit"); box.textContent = "";
+    const gone = new Set([...document.querySelectorAll("#t-cross tbody tr")].filter(tr => tr.hidden).map(tr => tr.dataset.ind));
+    pts = pts.filter(p => p.epct != null && !gone.has(p.name));
+    $("#n-fit").textContent = "Up = more H-1B filings for " + (lane ? "the " + (LANE[lane] || lane).replace(" (adjacent)", "") + " lane" : "titles in your lanes") + " (Massachusetts, last 4 quarters; the scale is compressed so small industries stay visible). Right = Boston jobs in that industry grew over the past year. Top right is where demand for your kind of role and industry growth coincide. Filled dot: median offered wage at or above your " + usdK(D.salary_floor) + " floor. Hollow: below it. Small grey: fewer than 5 filings, no wage shown. Dots without a name sit too close to another to label: hover or tap them, or read the table below. Changes with the Lane filter.";
+    const lg = $("#l-fit"); lg.textContent = ""; [["●", "Wage at or above floor"], ["○", "Wage below floor"], ["·", "Too few filings for a wage"]].forEach(x => { const sp = el("span"); sp.append(el("b", null, x[0] + " "), x[1]); lg.append(sp); });
+    if (!pts.length) return empty(box, "No industries to show.");
+    const W = 760, H = 400, Lm = 52, Rm = 150, Tm = 22, Bm = 40;
+    const xs = pts.map(p => p.epct), xmin = Math.min(-0.5, Math.floor(Math.min(...xs))), xmax = Math.max(0.5, Math.ceil(Math.max(...xs)));
+    const ymax = Math.max(10, ...pts.map(p => p.n)), ly = v => Math.log10(v + 1), yt = [0, 1, 3, 10, 30, 100, 300, 1000].filter(v => v <= ymax * 1.6);
+    const ytop = ly(yt[yt.length - 1]);
+    const x = v => Lm + (W - Lm - Rm) * (v - xmin) / (xmax - xmin), y = v => Tm + (H - Tm - Bm) * (1 - ly(v) / ytop);
+    const svg = sv("svg", {viewBox: "0 0 " + W + " " + H, role: "img", "aria-label": "Industries by job growth and H-1B filings for your lanes"});
+    yt.forEach(v => { svg.append(sv("line", {x1: Lm, x2: W - Rm, y1: y(v), y2: y(v), stroke: "var(--line2)", "stroke-width": 1})); svg.append(sv("text", {x: Lm - 6, y: y(v) + 4, "text-anchor": "end"}, v)); });
+    for (let v = xmin; v <= xmax; v++) svg.append(sv("text", {x: x(v), y: H - Bm + 16, "text-anchor": "middle"}, (v > 0 ? "+" : "") + v + "%"));
+    svg.append(sv("line", {x1: x(0), x2: x(0), y1: Tm - 6, y2: H - Bm, stroke: "var(--ink3)", "stroke-width": 1, "stroke-dasharray": "3 3"}));
+    svg.append(sv("text", {x: x(0) - 8, y: Tm - 8, "text-anchor": "end"}, "← fewer jobs than a year ago")); svg.append(sv("text", {x: x(0) + 8, y: Tm - 8}, "more jobs than a year ago →"));
+    svg.append(sv("text", {x: Lm, y: H - 6}, "Boston jobs, change over 1 year")); const yl = sv("text", {x: 12, y: Tm + 4, transform: "rotate(-90 12 " + (Tm + 4) + ")", "text-anchor": "end"}, "H-1B filings, your lanes"); svg.append(yl);
+    const tip = tipFor(box), placed = pts.map(p => [x(p.epct) - 8, y(p.n) + 4, 16]);
+    pts.slice().sort((a, b) => b.n - a.n).forEach(p => { const cx = x(p.epct), cy = y(p.n), g = sv("g", {tabindex: "0"});
+      if (p.wage == null) g.append(sv("circle", {cx, cy, r: 4, fill: "var(--ink3)", stroke: "var(--surface)", "stroke-width": 2}));
+      else if (p.wage >= D.salary_floor) g.append(sv("circle", {cx, cy, r: 7, fill: "var(--s1)", stroke: "var(--surface)", "stroke-width": 2}));
+      else g.append(sv("circle", {cx, cy, r: 6, fill: "var(--surface)", stroke: "var(--s1)", "stroke-width": 2.5}));
+      const lyy = cy + 4, lx = cx + 11, short = p.name.replace(/ \(.*\)$/, ""), wpx = Math.min(short.length, 30) * 6.2 + 14;
+      const clash = placed.some(q => Math.abs(q[1] - lyy) < 13 && lx < q[0] + q[2] && q[0] - 14 < lx + wpx);
+      if (!clash) { placed.push([lx, lyy, wpx]); g.append(sv("text", {x: lx, y: lyy}, short.length > 30 ? short.slice(0, 29) + "…" : short)); }
+      g.append(sv("circle", {cx, cy, r: 14, fill: "transparent"}));
+      const show = () => tip.show(cx / W * box.clientWidth, (cy - 10) / H * box.clientHeight, [[null, p.name], [fmt(p.n), "H-1B filings, your lanes"], [(p.epct > 0 ? "+" : "") + p.epct.toFixed(1) + "%", "Boston jobs, 1 year"], [p.wage == null ? "n/a" : usd(p.wage), "median offered wage"], [fmt(p.open), "open roles now in your lanes at tracked companies"], [fmt(p.openB), "of those in the Boston area"]]);
+      g.addEventListener("pointermove", show); g.addEventListener("focus", show); g.addEventListener("pointerleave", tip.hide); g.addEventListener("blur", tip.hide); svg.append(g); });
+    box.append(svg);
+  }
+  function applyGlobal() {
+    const f = {lane: $("#f-lane").value, region: $("#f-region").value, floor: $("#f-floor").checked, q: $("#f-q").value.trim().toLowerCase()};
+    const roles = R.filter(r => (!f.lane || r.lane === f.lane) && (!f.region || r.region === f.region) && (!f.floor || r.below !== 1));
+    /* who is hiring (chart) */
+    const by = {}; roles.forEach(r => { const a = by[r.company] || (by[r.company] = {company: r.company, total: 0, boston: 0, recent: 0, recentB: 0}); a.total++; if (r.region === "boston_area") a.boston++; if (r.posted && r.posted >= cut30) { a.recent++; if (r.region === "boston_area") a.recentB++; } });
+    const comp = Object.values(by);
+    drawCompanies(comp.slice().sort((a, b) => b.boston - a.boston || b.total - a.total).slice(0, 15));
+    /* posting the most in the last 30 days */
+    const pr = $("#t-precent tbody"); if (pr) { pr.textContent = ""; const rec = comp.filter(a => a.recent > 0).sort((a, b) => b.recent - a.recent).slice(0, 25);
+      rec.forEach(a => { const tr = el("tr"); tr.append(el("td", null, a.company), numTd(a.recent), numTd(a.recentB), numTd(a.total)); pr.append(tr); });
+      if (!rec.length) { const tr = el("tr"); tr.append(el("td", {colspan: "4", class: "muted"}, "No roles match the filters.")); pr.append(tr); } }
+    /* when open roles were posted, by lane */
+    const pm = $("#t-pmonth"); if (pm && pm.tBodies[0] && months.length) { const tb = pm.tBodies[0]; tb.textContent = ""; const ml = {};
+      roles.forEach(r => { const m = (r.posted || "").slice(0, 7), a = ml[r.lane] || (ml[r.lane] = {}); a[m] = (a[m] || 0) + 1; });
+      Object.keys(ml).sort((a, b) => Object.values(ml[b]).reduce((x, y) => x + y, 0) - Object.values(ml[a]).reduce((x, y) => x + y, 0)).forEach(l => { const tr = el("tr"); tr.append(el("td", null, LANE[l] || l)); months.forEach(m => tr.append(numTd(ml[l][m] || 0))); tb.append(tr); }); }
+    /* H-1B tables that depend on the lane */
+    if (L && L.lane_rows) {
+      const rows = L.lane_rows.filter(r => !f.lane || r[2] === f.lane), qs = L.quarters, qi = {}; qs.forEach((x, i) => qi[x] = i);
+      const group = (key) => { const m = {}; rows.forEach(r => { const a = m[r[key]] || (m[r[key]] = {name: r[key], c: qs.map(() => 0)}); a.c[qi[r[3]]]++; }); return Object.values(m).sort((a, b) => b.c.slice(-4).reduce((x, y) => x + y, 0) - a.c.slice(-4).reduce((x, y) => x + y, 0)); };
+      const names = {}; Object.keys(L.emp_totals).forEach(k => names[k] = L.emp_totals[k][0]);
+      G.lcaTable("#t-lemplane", group(0).slice(0, 40), "Employer", names); sortable($("#t-lemplane"));
+      G.lcaTable("#t-llane", group(2), "Lane", LANE); sortable($("#t-llane"));
+      /* sponsors table */
+      const sp = $("#sponsors tbody"); sp.textContent = ""; const em = {};
+      rows.forEach(r => { const a = em[r[0]] || (em[r[0]] = {n: 0, w: []}); a.n++; if (r[4]) a.w.push(r[4]); });
+      Object.keys(em).sort((a, b) => em[b].n - em[a].n).slice(0, 40).forEach(k => { const t = L.emp_totals[k] || [k, null, null], tr = el("tr");
+        const op = el("td", {class: "num"}); if (t[3]) op.textContent = fmt(by[t[3]] ? by[t[3]].total : 0); else op.append(el("span", {class: "muted"}, "not tracked"));
+        tr.append(el("td", null, t[0]), numTd(em[k].n), numTd(median(em[k].w), usd), numTd(t[1]), numTd(t[2], usd), op); sp.append(tr); });
+      if (!rows.length) { const tr = el("tr"); tr.append(el("td", {colspan: "6", class: "muted"}, "No filings match the filters.")); sp.append(tr); }
+      /* scorecard: lane filings, lane wage and average rank */
+      if (S && G.score.length) { const last4 = new Set(qs.slice(-4)), sec = {};
+        rows.forEach(r => { if (!last4.has(r[3])) return; const a = sec[r[1]] || (sec[r[1]] = {n: 0, w: []}); a.n++; if (r[4]) a.w.push(r[4]); });
+const CI = T.company_industry || {}, io = {}; let unk = 0;
+        roles.forEach(r => { const k = CI[r.company]; if (!k) { unk++; return; } const a = io[k] || (io[k] = {n: 0, b: 0}); a.n++; if (r.region === "boston_area") a.b++; });
+        $("#n-cover").textContent = "Open roles come from " + (T.tracked_companies || 0) + " tracked company job boards, mostly software companies. " + fmt(roles.length - unk) + " of " + fmt(roles.length) + " open roles are at companies with an industry on file; the other " + fmt(unk) + " are not counted in any row. An industry showing 0 means no tracked company in it has a matching role, not that the industry is not hiring.";
+        const cur = G.score.map(o => { const a = sec[o.r.name] || {n: 0, w: []}, op = io[o.r.name] || {n: 0, b: 0}; return {o, op, open: op.n, lca_lane: a.n || (o.r.lca_all ? 0 : null), lane_wage: a.w.length >= 5 ? median(a.w) : null, wage: o.r.wage, epct: o.r.epct, jo_chg: o.r.jo_chg}; });
+        cur.forEach(c => { if (c.lca_lane === 0 && !sec[c.o.r.name]) c.lca_lane = null; c.ranks = []; });
+        ["lca_lane", "lane_wage", "wage", "epct", "open"].forEach(k => { const vals = cur.filter(c => c[k] != null).map(c => c[k]).sort((a, b) => b - a); cur.forEach(c => { if (c[k] != null) c.ranks.push(vals.indexOf(c[k]) + 1); }); });
+        cur.forEach(c => { c.o.c3.textContent = fmt(c.op.n); c.o.c4.textContent = fmt(c.op.b); c.o.c1.textContent = fmt(sec[c.o.r.name] ? sec[c.o.r.name].n : 0); c.o.c2.textContent = c.lane_wage == null ? "" : usd(c.lane_wage);
+          c.o.ar.textContent = ""; if (c.ranks.length >= 4) c.o.ar.textContent = (c.ranks.reduce((x, y) => x + y, 0) / c.ranks.length).toFixed(1); else c.o.ar.append(el("span", {class: "muted"}, "n/a")); });
+        drawFit(cur.map(c => ({name: c.o.r.name, n: sec[c.o.r.name] ? sec[c.o.r.name].n : 0, wage: c.lane_wage, epct: c.o.r.epct, jo_chg: c.o.r.jo_chg, open: c.op.n, openB: c.op.b})), f.lane); }
+    }
+    /* search: every table except the role list, which filters before paging */
+    let hiddenRows = 0;
+    document.querySelectorAll("table").forEach(t => { if (t.id === "roles" || !t.tBodies[0]) return; [...t.tBodies[0].rows].forEach(tr => { const hide = !!f.q && tr.cells.length > 1 && !tr.textContent.toLowerCase().includes(f.q); tr.classList.toggle("fq-hide", hide); if (hide) hiddenRows++; }); });
+    const active = [f.lane && (LANE[f.lane] || f.lane).replace(" (adjacent)", ""), f.region && REGION[f.region], f.floor && "pay at or above floor", f.q && "“" + f.q + "”"].filter(Boolean);
+    $("#gstat").textContent = active.length ? "Filtered: " + active.join(" · ") : "";
+    $("#f-reset").hidden = !active.length;
+  }
+  ["#f-region", "#f-lane", "#f-floor"].forEach(s => $(s).addEventListener("change", applyGlobal));
+  $("#f-q").addEventListener("input", applyGlobal);
+  $("#f-reset").addEventListener("click", () => { $("#f-lane").value = ""; $("#f-region").value = ""; $("#f-floor").checked = false; $("#f-q").value = ""; shown = 50; renderRoles(); applyGlobal(); });
+  G.onHide = applyGlobal; applyGlobal();
+})();
+
+/* ---------- the five main sections */
+(function () {
+  const T = D.trends || {}, CI = T.company_industry || {}, S = T.scorecard, SK = D.skills || {have: [], other: []};
+  const APPLIED = new Set(["Datadog","Tulip","WHOOP","Klaviyo","Toast","SimpliSafe","Snyk","Wiz","Scale AI","Asana","Camunda","Fivetran","Affirm","MongoDB","BetterUp","Braze","EliseAI","Celonis","Lovable","Intersystems","Clarion","Rhino Federated Computing","Tessera Labs","Distyl","Auctor","Encord","Amperos","Restream","Synthesia","Serval","Basis","Palantir","Skydio"]);
+  const cut30 = new Date(new Date(D.asof + "T00:00:00").getTime() - 30 * 864e5).toISOString().slice(0, 10);
+  const numTd = (v, f) => el("td", {class: "num"}, v == null ? "" : (f ? f(v) : fmt(v)));
+  const pcTd = v => { const td = el("td", {class: "num"}); if (v == null) td.append(el("span", {class: "muted"}, "n/a")); else td.append(el("span", {class: v > 0 ? "up" : v < 0 ? "down" : ""}, (v > 0 ? "+" : "") + v.toFixed(1) + "%")); return td; };
+  const cov = r => { const n = r.have.length + r.other.length; return n ? r.have.length / n : null; };
+  const avg = a => a.length ? a.reduce((x, y) => x + y, 0) / a.length : null;
+  const short = n => n.replace(/ \(.*\)$/, "");
+  const chips = (items, cls) => { const d = el("div", {class: "chips"}); items.forEach(t => d.append(el("span", {class: "chip" + (cls ? " " + cls : "")}, t))); return d; };
+  const matchTd = v => { const td = el("td", {class: "num"}); if (v == null) return td; const b = el("span", {class: "bar"}); b.style.width = Math.round(v * 40) + "px"; td.append(b, Math.round(v * 100) + "%"); return td; };
+  const B = R.filter(r => r.region === "boston_area");
+  const sc = {}; (S ? S.rows : []).forEach(r => sc[r.name] = r);
+
+  /* 1. industries */
+  const ind = {}; B.forEach(r => { const k = CI[r.company] || "Industry not on file"; const a = ind[k] || (ind[k] = {name: k, n: 0, recent: 0, cos: {}}); a.n++; a.cos[r.company] = (a.cos[r.company] || 0) + 1; if (r.posted && r.posted >= cut30) a.recent++; });
+  const CE = "Clean and renewable energy"; if (!ind[CE] && sc[CE]) ind[CE] = {name: CE, n: 0, recent: 0, cos: {}, none: true};
+  const indRows = Object.values(ind).sort((a, b) => (a.name === "Industry not on file") - (b.name === "Industry not on file") || b.recent - a.recent || b.n - a.n);
+  indRows.forEach(a => { const r = sc[a.name] || {}, tr = el("tr"), cos = Object.keys(a.cos).sort((x, y) => a.cos[y] - a.cos[x]);
+    tr.append(el("td", null, a.name), numTd(a.recent), numTd(a.n), el("td", a.none ? {class: "muted"} : null, a.none ? "No job board from this industry is loaded yet" : cos.slice(0, 5).map(c => c + " (" + a.cos[c] + ")").join(", ") + (cos.length > 5 ? ", +" + (cos.length - 5) + " more" : "")), numTd(r.lca_lane), numTd(r.lane_wage, usd), pcTd(r.epct == null ? null : r.epct)); $("#m-ind tbody").append(tr); });
+  if (!indRows.length) { const tr = el("tr"); tr.append(el("td", {colspan: "7", class: "muted"}, "No open Boston roles loaded.")); $("#m-ind tbody").append(tr); }
+
+  /* title-group demand across all tracked boards */
+  const grp = {}; R.forEach(r => { const g = grp[r.grp] || (grp[r.grp] = {name: r.grp, rows: [], cos: new Set(), boston: 0, recent: 0}); g.rows.push(r); g.cos.add(r.company); if (r.region === "boston_area") g.boston++; if (r.posted && r.posted >= cut30) g.recent++; });
+
+  /* 2. roles */
+  const cand = B.filter(r => r.below !== 1).map(r => ({r, c: cov(r), heat: grp[r.grp].cos.size})).sort((a, b) => (b.c || 0) * Math.log2(1 + b.heat) - (a.c || 0) * Math.log2(1 + a.heat));
+  let shownR = 12;
+  function drawRoles() { const tb = $("#m-roles tbody"); tb.textContent = "";
+    cand.slice(0, shownR).forEach(x => { const r = x.r, tr = el("tr"), t = el("td", {class: "wide"});
+      t.append(el("a", {href: r.url, target: "_blank", rel: "noopener"}, r.title), el("br"), el("span", {class: "muted"}, r.company + " · " + (LANE[r.lane] || r.lane).replace(" (adjacent)", "")));
+      if (APPLIED.has(r.company)) { t.append(" "); t.append(el("span", {class: "chip tag"}, "applied here before")); }
+      const pt = payText(r), p = el("td", {class: "num"}); if (pt) p.textContent = pt; else p.append(el("span", {class: "muted"}, "not posted"));
+      const h = el("td", {class: "wide"}); h.append(chips(r.have.slice(0, 5).map(i => short(SK.have[i])).concat(r.have.length > 5 ? ["+" + (r.have.length - 5) + " more"] : [])));
+      const o = el("td"); o.append(chips(r.other.map(i => short(SK.other[i])), "gap"));
+      tr.append(t, p, numTd(r.posted, v => v), numTd(x.heat), matchTd(x.c), h, o); tb.append(tr); });
+    $("#m-more").hidden = cand.length <= shownR; }
+  $("#m-more").addEventListener("click", () => { shownR += 10; drawRoles(); }); drawRoles();
+
+  /* 3. skill match by role type and by industry */
+  function profile(rows) { const hc = {}, oc = {}; rows.forEach(r => { r.have.forEach(i => hc[i] = (hc[i] || 0) + 1); r.other.forEach(i => oc[i] = (oc[i] || 0) + 1); });
+    const top = (c, names, n) => Object.keys(c).sort((a, b) => c[b] - c[a]).slice(0, n).filter(i => c[i] / rows.length >= 0.2).map(i => short(names[i]) + " " + Math.round(100 * c[i] / rows.length) + "%");
+    return {cov: avg(rows.map(cov).filter(v => v != null)), have: top(hc, SK.have, 4), other: top(oc, SK.other, 3)}; }
+  function fitTable(id, list) { list.forEach(g => { const pf = profile(g.rows), tr = el("tr"), h = el("td", {class: "wide"}), o = el("td", {class: "wide"}); h.append(chips(pf.have)); o.append(chips(pf.other, "gap")); g.pf = pf;
+      tr.append(el("td", null, g.name), numTd(g.cos.size), numTd(g.rows.length), numTd(g.boston), matchTd(pf.cov), h, o); $(id + " tbody").append(tr); }); }
+  const topGroups = Object.values(grp).filter(g => g.cos.size >= 3 && g.name.split(" ").length > 1).sort((a, b) => b.cos.size - a.cos.size || b.rows.length - a.rows.length).slice(0, 14);
+  fitTable("#m-fit-role", topGroups);
+  const byInd = {}; R.forEach(r => { const k = CI[r.company]; if (!k) return; const g = byInd[k] || (byInd[k] = {name: k, rows: [], cos: new Set(), boston: 0}); g.rows.push(r); g.cos.add(r.company); if (r.region === "boston_area") g.boston++; });
+  fitTable("#m-fit-ind", Object.values(byInd).sort((a, b) => b.rows.length - a.rows.length));
+
+  /* 4a. demand vs fit scatter */
+  (function () { const box = $("#m-chart-fit"), pts = topGroups.filter(g => g.pf.cov != null); if (!pts.length) return empty(box, "No data.");
+    const W = 560, H = 380, Lm = 46, Rm = 150, Tm = 14, Bm = 40, xs = pts.map(p => p.pf.cov * 100), xmin = Math.floor(Math.min(...xs) / 5) * 5 - 5, xmax = Math.min(100, Math.ceil(Math.max(...xs) / 5) * 5 + 5), ymax = niceMax(Math.max(...pts.map(p => p.cos.size)));
+    const x = v => Lm + (W - Lm - Rm) * (v - xmin) / (xmax - xmin), y = v => Tm + (H - Tm - Bm) * (1 - v / ymax), svg = sv("svg", {viewBox: "0 0 " + W + " " + H, role: "img", "aria-label": "Role types by CV match and number of companies hiring"});
+    for (let i = 0; i <= 4; i++) { const v = ymax * i / 4; svg.append(sv("line", {x1: Lm, x2: W - Rm, y1: y(v), y2: y(v), stroke: "var(--line2)", "stroke-width": 1})); svg.append(sv("text", {x: Lm - 6, y: y(v) + 4, "text-anchor": "end"}, Math.round(v))); }
+    for (let v = xmin; v <= xmax; v += 5) svg.append(sv("text", {x: x(v), y: H - Bm + 16, "text-anchor": "middle"}, v + "%"));
+    svg.append(sv("text", {x: Lm, y: H - 6}, "CV match: share of requested skills that are on your CV")); svg.append(sv("text", {x: 12, y: Tm + 4, transform: "rotate(-90 12 " + (Tm + 4) + ")", "text-anchor": "end"}, "Companies hiring"));
+    const tip = tipFor(box), placed = pts.map(p => [x(p.pf.cov * 100) - 8, y(p.cos.size) + 4, 16]);
+    pts.slice().sort((a, b) => b.cos.size - a.cos.size).forEach(p => { const cx = x(p.pf.cov * 100), cy = y(p.cos.size), g = sv("g", {tabindex: "0"});
+      g.append(p.boston ? sv("circle", {cx, cy, r: 6.5, fill: "var(--s1)", stroke: "var(--surface)", "stroke-width": 2}) : sv("circle", {cx, cy, r: 5.5, fill: "var(--surface)", stroke: "var(--s1)", "stroke-width": 2.5}));
+      const lx = cx + 11, ly = cy + 4, wpx = Math.min(p.name.length, 28) * 6.2 + 14, clash = placed.some(q => Math.abs(q[1] - ly) < 13 && lx < q[0] + q[2] && q[0] - 14 < lx + wpx);
+      if (!clash) { placed.push([lx, ly, wpx]); g.append(sv("text", {x: lx, y: ly}, p.name.length > 28 ? p.name.slice(0, 27) + "…" : p.name)); }
+      g.append(sv("circle", {cx, cy, r: 14, fill: "transparent"}));
+      const show = () => tip.show(cx / W * box.clientWidth, (cy - 10) / H * box.clientHeight, [[null, p.name], [Math.round(p.pf.cov * 100) + "%", "CV match"], [p.cos.size, "companies hiring"], [p.rows.length, "open roles"], [p.boston, "in the Boston area"]]);
+      g.addEventListener("pointermove", show); g.addEventListener("focus", show); g.addEventListener("pointerleave", tip.hide); g.addEventListener("blur", tip.hide); svg.append(g); });
+    box.append(svg); })();
+
+  /* 4b. Boston jobs trendlines, indexed */
+  (function () { const box = $("#m-chart-trend"), I = T.industries; if (!I || !I.rows.length) return empty(box, "Trend data not loaded.");
+    const CES = {"Finance and insurance": "Finance, insurance and real estate"}, cols = ["var(--s1)", "var(--s2)", "var(--s3)", "var(--s4)"];
+    const want = indRows.filter(a => a.name !== "Industry not on file").slice(0, 4).map(a => a.name), yEnd = +I.month.slice(0, 4), mon = MON[+I.month.slice(5) - 1];
+    const series = want.map((n, k) => { const row = I.rows.find(r => r.name === (CES[n] || n)); if (!row || row.spark.length < 8) return null; const y0 = yEnd - row.spark.length + 1, bi = 2019 - y0; if (bi < 0) return null; return {name: CES[n] || n, color: cols[k], y0, v: row.spark.map(v => 100 * v / row.spark[bi])}; }).filter(Boolean);
+    if (!series.length) return empty(box, "Trend data not loaded.");
+    $("#h-trendline").textContent = "Boston jobs in those industries since 2015"; $("#n-trendline").textContent = "All jobs in the industry, " + mon + " of each year, indexed so " + mon + " 2019 = 100. Source: BLS.";
+    series.forEach(s2 => { const sp = el("span"), i = el("i"); i.style.background = s2.color; sp.append(i, short(s2.name)); $("#m-legend").append(sp); });
+    const W = 560, H = 340, Lm = 40, Rm = 54, Tm = 12, Bm = 26, n = series[0].v.length, all = series.flatMap(s2 => s2.v), lo = Math.floor(Math.min(...all) / 5) * 5, hi = Math.ceil(Math.max(...all) / 5) * 5;
+    const x = i => Lm + (W - Lm - Rm) * i / (n - 1), y = v => Tm + (H - Tm - Bm) * (1 - (v - lo) / (hi - lo)), svg = sv("svg", {viewBox: "0 0 " + W + " " + H, role: "img", "aria-label": "Boston jobs by industry, indexed to 2019"});
+    for (let v = lo; v <= hi; v += 5) { svg.append(sv("line", {x1: Lm, x2: W - Rm, y1: y(v), y2: y(v), stroke: v === 100 ? "var(--ink3)" : "var(--line2)", "stroke-width": 1})); svg.append(sv("text", {x: Lm - 6, y: y(v) + 4, "text-anchor": "end"}, v)); }
+    for (let i = 0; i < n; i++) if ((series[0].y0 + i) % 2 === 1 || i === n - 1) svg.append(sv("text", {x: x(i), y: H - 6, "text-anchor": "middle"}, series[0].y0 + i));
+    const ends = [];
+    series.forEach(s2 => { svg.append(sv("path", {d: s2.v.map((v, i) => (i ? "L" : "M") + x(i).toFixed(1) + " " + y(v).toFixed(1)).join(""), fill: "none", stroke: s2.color, "stroke-width": 2, "stroke-linejoin": "round"})); svg.append(sv("circle", {cx: x(n - 1), cy: y(s2.v[n - 1]), r: 4, fill: s2.color, stroke: "var(--surface)", "stroke-width": 2})); ends.push({y: y(s2.v[n - 1]), t: s2.v[n - 1].toFixed(0)}); });
+    ends.sort((a, b) => a.y - b.y); for (let i = 1; i < ends.length; i++) if (ends[i].y - ends[i - 1].y < 13) ends[i].y = ends[i - 1].y + 13; ends.forEach(e => svg.append(sv("text", {x: x(n - 1) + 8, y: e.y + 4, class: "v"}, e.t)));
+    const hair = sv("line", {y1: Tm, y2: H - Bm, stroke: "var(--ink3)", "stroke-width": 1, visibility: "hidden"}); svg.append(hair);
+    const tip = tipFor(box), hit = sv("rect", {x: Lm, y: Tm, width: W - Lm - Rm, height: H - Tm - Bm, fill: "transparent"}); svg.append(hit);
+    hit.addEventListener("pointermove", e => { const i = Math.max(0, Math.min(n - 1, Math.round((scaleX(svg, box, e) - Lm) / (W - Lm - Rm) * (n - 1)))); hair.setAttribute("x1", x(i)); hair.setAttribute("x2", x(i)); hair.setAttribute("visibility", "visible");
+      tip.show(x(i) / W * box.clientWidth, Math.min(...series.map(s2 => y(s2.v[i]))) / H * box.clientHeight, [[null, mon + " " + (series[0].y0 + i)]].concat(series.map(s2 => [s2.v[i].toFixed(1), short(s2.name)]))); });
+    hit.addEventListener("pointerleave", () => { tip.hide(); hair.setAttribute("visibility", "hidden"); }); box.append(svg); })();
+
+  /* 4c. documented cases */
+  (function () { const C = D.cases || {}, L = T.lca, rows = topGroups.filter(g => C[g.name] && C[g.name].n).sort((a, b) => C[b.name].n - C[a.name].n);
+    if (L) $("#h-cases").textContent = "Documented cases: Massachusetts employers that sponsored these exact titles, " + L.quarters[0] + " to " + L.quarters[L.quarters.length - 1];
+    rows.forEach(g => { const c = C[g.name], tr = el("tr"); tr.append(el("td", null, g.name), numTd(c.n), numTd(c.wage, usd), el("td", null, c.employers.join(", "))); $("#m-cases tbody").append(tr); });
+    if (!rows.length) { const tr = el("tr"); tr.append(el("td", {colspan: "4", class: "muted"}, "No certified filings with these exact titles in the loaded period.")); $("#m-cases tbody").append(tr); } })();
+
+  /* 5. ways to stand out, tied to the numbers above */
+  (function () { const box = $("#m-stand"), byCo = {}; cand.forEach(x => byCo[x.r.company] = (byCo[x.r.company] || 0) + 1);
+    const topCo = Object.keys(byCo).sort((a, b) => byCo[b] - byCo[a]).slice(0, 5).map(c => c + " (" + byCo[c] + ")").join(", ");
+    const oc = {}; cand.forEach(x => x.r.other.forEach(i => oc[i] = (oc[i] || 0) + 1)); const gapI = Object.keys(oc).filter(i => /^(APIs|Cloud|Data |Kubernetes|Statistics|Financial modeling|Infrastructure|Software)/.test(SK.other[i])).sort((a, b) => oc[b] - oc[a])[0];
+    const dataI = SK.have.findIndex(n => /^Data analysis/.test(n)), dashI = SK.have.findIndex(n => /^Dashboards/.test(n)), nData = cand.filter(x => x.r.have.includes(dataI) || x.r.have.includes(dashI)).length;
+    const L = T.lca, et = L && L.emp_totals ? L.emp_totals : {}, cnt = {}; if (L && L.lane_rows) L.lane_rows.forEach(r => cnt[r[0]] = (cnt[r[0]] || 0) + 1);
+    const top40 = Object.keys(cnt).sort((a, b) => cnt[b] - cnt[a]).slice(0, 40), untr = top40.filter(k => !(et[k] || [])[3]);
+    const ideas = [
+      ["Send a working demo instead of an application", "Pick one open role, build a small working example on that company's own product or public data, and email it to the team lead. You have done this twice: the Foundry and AIP app for Palantir and the portfolio built on Lovable.", cand.length ? "Most Boston roles at or above your floor: " + topCo + "." : ""],
+      ["Publish the market brief you already have", "Turn sections 1 to 3 of this page into a one-page brief on who is hiring deployment and operations roles in Boston, what they ask for and what they pay. Send it to the heads of those teams. It is proof of the analysis skill the roles ask for.", cand.length ? nData + " of " + cand.length + " Boston roles above ask for data analysis or dashboards." : ""],
+      ["Go direct to the sponsors this page cannot see", "Most Massachusetts employers that sponsor your kind of title are not in this database, so their openings do not show up here. Check their careers pages yourself and reach a named person through Hult alumni, the Boston Israeli tech community and veteran networks.", top40.length ? untr.length + " of the top " + top40.length + " sponsors for your lanes are not tracked here, including " + untr.slice(0, 4).map(k => (et[k] || [k])[0]).join(", ") + "." : ""],
+      ["Close the most requested gap in public", gapI != null ? "Build one small project that shows " + short(SK.other[gapI]) + " and publish it with the code and a two-minute walkthrough video. It removes the most common objection before the first screen." : "", gapI != null ? short(SK.other[gapI]) + " appears in " + oc[gapI] + " of " + cand.length + " Boston roles above and is not on your CV." : ""],
+      ["Meet the team where its customers are", "Deployment and solutions teams attend their company's user groups and customer events. Go to one, ask a practitioner question, then follow up with the demo from the first idea.", "Not verified: which of these companies run Boston events this quarter. Check each company's events page."],
+    ];
+    ideas.filter(i => i[1]).forEach(i => { const d = el("div", {class: "idea"}); d.append(el("h3", null, i[0]), el("p", null, i[1])); if (i[2]) d.append(el("p", {class: "why"}, i[2])); box.append(d); }); })();
+
+  if (typeof sortable === "function") ["#m-ind", "#m-fit-role", "#m-fit-ind", "#m-cases"].forEach(id => sortable($(id)));
+})();
+
+/* ---------- Ask Claude: a chat that answers from this page's data through page tools */
+(async function () {
+  if (!window.claude || !window.claude.use) return;
+  const sample = await window.claude.use("sample"); if (!sample) return;
+  const caps = await sample.limits().catch(() => null), canTools = !!(caps && caps.tools);
+  const T = D.trends || {}, L = T.lca, S = T.scorecard;
+  const openBtn = $("#ask-open"), panel = $("#ask"), log = $("#ask-log"), box = $("#ask-box"), send = $("#ask-send");
+  openBtn.hidden = false;
+  let turns = [], ctl = null, busy = false;
+  const med = a => { if (!a.length) return null; const b = a.slice().sort((x, y) => x - y), m = b.length >> 1; return b.length % 2 ? b[m] : Math.round((b[m - 1] + b[m]) / 2); };
+  const last4 = L ? new Set(L.quarters.slice(-4)) : new Set(), CI = T.company_industry || {};
+  function industryTable() {
+    const cross = {}; if (L && L.lane_rows) L.lane_rows.forEach(r => { if (!last4.has(r[3])) return; const a = cross[r[1]] || (cross[r[1]] = {}); a[r[2]] = (a[r[2]] || 0) + 1; });
+    const io = {}; R.forEach(r => { const k = CI[r.company]; if (!k) return; const a = io[k] || (io[k] = {n: 0, b: 0}); a.n++; if (r.region === "boston_area") a.b++; });
+    return (S ? S.rows : []).map(r => ({industry: r.name, boston_jobs: r.emp, boston_jobs_1y_pct: r.epct, weekly_wage_usd: r.wage, weekly_wage_1y_pct: r.wpct, open_roles_now_user_lanes_at_tracked_companies: (io[r.name] || {n: 0}).n, open_roles_now_boston: (io[r.name] || {b: 0}).b, us_openings_rate_all_occupations_nationwide_pct: r.jo, us_openings_rate_change_points: r.jo_chg,
+      h1b_filings_all_titles_last4q: r.lca_all || 0, h1b_filings_user_lanes_last4q: r.lca_lane || 0, median_offered_wage_user_lanes: r.lane_wage || null, h1b_filings_by_lane_last4q: cross[r.name] || {}}));
+  }
+  const tools = [
+    {name: "find_roles", description: "Search the open job postings in the user's lanes (" + R.length + " roles). Returns up to `limit` matches with company, title, location, region, lane, pay range, posting date and the posting URL, plus total_matches. Use it for any question about specific roles or companies' openings.",
+      inputSchema: {type: "object", properties: {query: {type: "string", description: "words that must appear in company, title or location"}, lane: {type: "string", enum: Object.keys(LANE)}, region: {type: "string", enum: Object.keys(REGION)}, company: {type: "string"}, industry: {type: "string", description: "industry name as in industry_table; matches the employer's own industry, not words in the title"}, min_pay_max: {type: "number", description: "keep roles whose posted top of range is at least this"}, posted_since: {type: "string", description: "YYYY-MM-DD"}, limit: {type: "number"}}},
+      execute(i) { const q = String(i.query || "").toLowerCase().split(/\s+/).filter(Boolean), co = String(i.company || "").toLowerCase();
+        const m = R.filter(r => (!i.industry || CI[r.company] === i.industry) && (!i.lane || r.lane === i.lane) && (!i.region || r.region === i.region) && (!co || r.company.toLowerCase().includes(co)) && (!i.min_pay_max || (r.cmax != null && r.cmax >= Number(i.min_pay_max))) && (!i.posted_since || (r.posted && r.posted >= String(i.posted_since))) && q.every(w => (r.company + " " + r.title + " " + r.loc).toLowerCase().includes(w)));
+        return {total_matches: m.length, roles: m.slice(0, Math.min(Number(i.limit) || 15, 25)).map(r => ({company: r.company, title: r.title, location: r.loc.slice(0, 90), region: r.region, lane: r.lane, employer_industry: CI[r.company] || "not on file", asks_on_cv: r.have.map(k => D.skills.have[k]), asks_not_on_cv: r.other.map(k => D.skills.other[k]), pay_min: r.cmin, pay_max: r.cmax, posted: r.posted, url: r.url}))}; }},
+    {name: "industry_table", description: "The industry cross-reference: for each industry, Boston jobs and 1-year change, weekly wage, US openings rate and its change, and Massachusetts H-1B filings for the user's lanes (total and per lane) with median offered wage. Use it for any question about which industry to target.",
+      execute() { return industryTable(); }},
+    {name: "h1b_employers", description: "Massachusetts employers with certified H-1B filings for job titles in the user's lanes, optionally for one lane or one industry. Returns employer, filings for lane titles, median offered wage for those, and the employer's filings across all titles.",
+      inputSchema: {type: "object", properties: {lane: {type: "string", enum: Object.keys(LANE)}, industry: {type: "string", description: "industry name as in industry_table"}, limit: {type: "number"}}},
+      execute(i) { if (!L || !L.lane_rows) throw new Error("H-1B data not loaded"); const em = {};
+        L.lane_rows.forEach(r => { if ((i.lane && r[2] !== i.lane) || (i.industry && r[1] !== i.industry)) return; const a = em[r[0]] || (em[r[0]] = {n: 0, w: [], ind: r[1]}); a.n++; if (r[4]) a.w.push(r[4]); });
+        return {period: L.quarters[0] + " to " + L.quarters[L.quarters.length - 1], employers: Object.keys(em).sort((a, b) => em[b].n - em[a].n).slice(0, Math.min(Number(i.limit) || 20, 40)).map(k => ({employer: (L.emp_totals[k] || [k])[0], industry: em[k].ind, filings_lane_titles: em[k].n, median_offered_wage_lane_titles: med(em[k].w), filings_all_titles: (L.emp_totals[k] || [])[1] || null, open_lane_roles_now: (L.emp_totals[k] || [])[3] ? R.filter(r => r.company === L.emp_totals[k][3]).length : "not tracked (openings unknown)"}))}; }},
+    {name: "company_summary", description: "Everything on the page about one company: its open roles in the user's lanes by lane and region, how many were posted in the last 30 days, and its Massachusetts H-1B filings if the name matches.",
+      inputSchema: {type: "object", properties: {company: {type: "string"}}, required: ["company"]},
+      execute(i) { const co = String(i.company || "").toLowerCase(); if (!co) throw new Error("company is required"); const m = R.filter(r => r.company.toLowerCase().includes(co)), by = (k) => m.reduce((o, r) => (o[r[k]] = (o[r[k]] || 0) + 1, o), {});
+        const cut = new Date(new Date(D.asof + "T00:00:00").getTime() - 30 * 864e5).toISOString().slice(0, 10);
+        const h = L && L.emp_totals ? Object.keys(L.emp_totals).filter(k => k.toLowerCase().includes(co)).map(k => ({employer: L.emp_totals[k][0], filings_all_titles: L.emp_totals[k][1], median_offered_wage_all_titles: L.emp_totals[k][2], filings_lane_titles: L.lane_rows.filter(r => r[0] === k).length})) : [];
+        return {tracked_job_board: m.length > 0 || Object.keys(CI).some(c => c.toLowerCase().includes(co)) ? true : "unknown or not tracked: openings cannot be checked here", industry: (m[0] && CI[m[0].company]) || null, open_roles_in_user_lanes: m.length, by_lane: by("lane"), by_region: by("region"), posted_last_30_days: m.filter(r => r.posted && r.posted >= cut).length, h1b_massachusetts: h, note: m.length || h.length ? undefined : "No match. The page tracks " + Object.keys(cc).length + " companies with open lane roles."}; }},
+    {name: "boston_market", description: "Boston-area labor market figures: annual wage percentiles by occupation, jobs by industry with 1-year and 3-year change, and the latest unemployment rate.",
+      execute() { return {wages_by_occupation: D.wages, jobs_by_industry: (T.industries ? T.industries.rows : []).filter(r => !r.agg).map(r => ({industry: r.name, jobs: Math.round(r.now * 1000), change_1y_jobs: r.d1, change_1y_pct: r.y1, change_3y_pct: r.y3})), jobs_month: T.industries ? T.industries.month : "", unemployment_rate: D.unemp.length ? {month: D.unemp[D.unemp.length - 1][0], pct: D.unemp[D.unemp.length - 1][1]} : null}; }},
+  ];
+  function rules() {
+    const f = [$("#f-lane").value && "lane=" + $("#f-lane").value, $("#f-region").value && "region=" + $("#f-region").value, $("#f-q").value && "search=" + $("#f-q").value].filter(Boolean).join(", ") || "none";
+    return "You are an assistant embedded in a private job-market dashboard called Boston Job Radar. The user is a job seeker based in Boston: about 5 years deploying AI SaaS for Fortune 500 clients (HiredScore, then Workday, most recently Senior Technical Delivery Analyst), MBA in Business Analytics (Hult, 2026). Skills on the CV on file: " + (D.skills ? D.skills.have.join("; ") : "") + ". Not wanted: pure sales, pure engineering, entry-level. Target lanes: " + Object.values(LANE).join("; ") + ". Salary floor: $" + D.salary_floor + " base. Roles at director level and above are out of scope.\n\n" +
+      "Data on the page (public sources only): open postings in the user's lanes as of " + D.asof + " from " + Object.keys(cc).length + " company job boards (mostly tech companies); Massachusetts H-1B filings (Labor Condition Applications) " + (L ? L.quarters[0] + " to " + L.quarters[L.quarters.length - 1] : "not loaded") + "; BLS data on Boston jobs, wages and US openings rates.\n\n" +
+      "Rules: Answer only from the tool results or the data given here. Never invent a company, role, number or link; if the data does not cover something, say 'not in the data'. You cannot browse the web, send messages, apply to jobs or change the dashboard; you can analyse, shortlist, compare and draft text (for example outreach notes under 300 characters) for the user to send. The page holds three separate datasets that do not measure the same thing, so never present one as evidence for another: (1) live postings, only from the tracked company boards, mostly software companies; (2) H-1B filings, which show past sponsorship of a kind of role and are not current openings; (3) BLS figures, which cover every occupation in an industry (factory, clinical and retail jobs included), and the US openings rate is nationwide, so it says nothing about roles in the user's lanes or in Boston. Before recommending an industry or employer, call the tools and state how many live roles in the user's lanes actually exist there; if there are few or none, say so first. A company marked not tracked has unknown openings: say 'not tracked', never 'no open roles'. When you list roles, include the posting URL exactly as given. Be direct and brief: short bullets, answer first, explain any technical term in plain words the first time. Never use em dashes.\n\n" +
+      "Filters currently applied on the page: " + f + "." + (canTools ? " Use the tools to look things up before answering." : "\n\nIndustry table (JSON):\n" + JSON.stringify(industryTable()));
+  }
+  function render(elm, text) { elm.textContent = ""; String(text).split(/(https?:\/\/[^\s)\]>"']+)/g).forEach((part, i) => { if (i % 2) { const u = part.replace(/[.,;:]+$/, ""); elm.append(el("a", {href: u, target: "_blank", rel: "noopener"}, "link")); if (u.length < part.length) elm.append(part.slice(u.length)); } else elm.append(part.replace(/\*\*/g, "")); }); }
+  function add(cls, text) { const d = el("div", {class: "msg " + cls}); render(d, text); log.append(d); log.scrollTop = log.scrollHeight; return d; }
+  const COPY = {not_granted: "Claude is not allowed on this page for this view. Reload and allow it to use this panel.", sampling_disabled: "Claude is not available for this account.", rate_limited: "Usage limit reached. Try again later.", session_expired: "Your session expired. Sign in again.", refused: "Claude declined that request. Try rephrasing.", prompt_too_large: "That conversation got too long. Start a new chat.", tools_unavailable: "This view cannot look up page data.", empty_completion: "No answer came back. Try a simpler question."};
+  function intro() { log.textContent = ""; add("sys", "Answers come from the data on this page. It can analyse, shortlist, compare and draft; it cannot browse, send or apply. Uses your Claude usage.");
+    const sg = el("div", {id: "ask-sugg"}); ["Which 5 open Boston roles fit me best, and why? Include links.", "Which industry should I prioritise? Use growth, pay and filings for my lanes.", "Which Massachusetts employers sponsor business operations roles and also have a role open now?", "Draft a LinkedIn note under 300 characters for the top Deployment Strategist role in Boston."].forEach(q => { const b = el("button", {type: "button"}, q); b.addEventListener("click", () => ask(q)); sg.append(b); }); log.append(sg); }
+  async function ask(q) {
+    q = String(q || "").trim(); if (!q || busy) return; busy = true; const sg = $("#ask-sugg"); if (sg) sg.remove();
+    add("you", q); turns.push({role: "user", content: q}); box.value = "";
+    const out = add("ai", "Thinking…"); ctl = new AbortController(); send.textContent = "Stop"; send.classList.add("stop");
+    const opts = {signal: ctl.signal, onText: ({text}) => { render(out, text); log.scrollTop = log.scrollHeight; }};
+    if (canTools) opts.tools = tools.map(t => Object.assign({}, t, {execute(i, c) { if (out.textContent === "Thinking…") out.textContent = "Looking up page data…"; return t.execute(i || {}, c); }})); else opts.cache = false;
+    try { const res = await sample([{role: "user", content: rules()}].concat(turns.slice(-12)), opts); render(out, res.text); turns.push({role: "assistant", content: res.text}); if (res.truncated) add("sys", "The answer was cut short. Ask for less at a time."); }
+    catch (e) { const code = e && e.code; if (e && e.text) { render(out, e.text); turns.push({role: "assistant", content: e.text}); } else out.remove(); if (code !== "cancelled") add("sys", COPY[code] || "Something went wrong reaching Claude. Try again."); else if (!(e && e.text)) turns.pop(); }
+    finally { busy = false; ctl = null; send.textContent = "Send"; send.classList.remove("stop"); }
+  }
+  openBtn.addEventListener("click", () => { panel.hidden = false; openBtn.hidden = true; if (!log.childNodes.length) intro(); box.focus(); });
+  $("#ask-close").addEventListener("click", () => { panel.hidden = true; openBtn.hidden = false; });
+  $("#ask-clear").addEventListener("click", () => { if (ctl) ctl.abort(); turns = []; intro(); });
+  $("#ask-form").addEventListener("submit", e => { e.preventDefault(); if (busy) { if (ctl) ctl.abort(); } else ask(box.value); });
+  box.addEventListener("keydown", e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); if (!busy) ask(box.value); } });
+})();
+</script>

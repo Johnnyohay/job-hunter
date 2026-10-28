@@ -1,0 +1,313 @@
+{
+  "_readme": "Edit freely. Keys are read on every run.",
+  "user_agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) jobmarket-db/1.0",
+  "contact_email": "",
+  "census_api_key": "",
+  "min_year": 2015,
+  "salary_floor": 150000,
+  "refresh_days": {
+    "jobs": 0,
+    "laus": 7,
+    "ces": 7,
+    "jolts": 7,
+    "oews": 30,
+    "qcew": 7,
+    "acs": 30,
+    "qwi": 30,
+    "cbp": 30,
+    "lca": 7,
+    "discover": 30
+  },
+  "ces_files": [
+    "sm.data.22.Massachusetts",
+    "sm.data.30.NewHampshire",
+    "sm.data.41.RhodeIsland",
+    "sm.data.7.Connecticut",
+    "sm.data.33a.NewYork",
+    "sm.data.33b.NewYork"
+  ],
+  "oews_area_name_contains": [
+    "Boston-Cambridge-Newton",
+    "New York-Newark-Jersey City",
+    "Washington-Arlington-Alexandria",
+    "Philadelphia-Camden-Wilmington",
+    "Worcester",
+    "Providence-Warwick"
+  ],
+  "qcew_areas": [
+    "C1446",
+    "25000",
+    "25025",
+    "25017",
+    "25021",
+    "25009",
+    "25023",
+    "C3562",
+    "C4790",
+    "C3798",
+    "US000"
+  ],
+  "qcew_quarters_back": 10,
+  "acs_groups": [
+    "B24011",
+    "C24010",
+    "C24030",
+    "B15003",
+    "B23025"
+  ],
+  "acs_geos": [
+    "metropolitan%20statistical%20area/micropolitan%20statistical%20area:14460",
+    "state:25",
+    "us:1"
+  ],
+  "qwi_state": "25",
+  "qwi_quarters_back": 8,
+  "qwi_vars": [
+    "Emp",
+    "HirA",
+    "HirN",
+    "Sep",
+    "EarnS",
+    "EarnHirAS",
+    "FrmJbGn",
+    "FrmJbLs"
+  ],
+  "qwi_sectors": [
+    "00",
+    "11",
+    "21",
+    "22",
+    "23",
+    "31-33",
+    "42",
+    "44-45",
+    "48-49",
+    "51",
+    "52",
+    "53",
+    "54",
+    "55",
+    "56",
+    "61",
+    "62",
+    "71",
+    "72",
+    "81",
+    "92"
+  ],
+  "lca_discover_top_n": 200,
+  "report_soc_codes": [
+    "13-1111",
+    "13-1082",
+    "13-1199",
+    "13-1161",
+    "15-2031",
+    "15-2051",
+    "11-1021",
+    "11-2021",
+    "11-3021",
+    "41-9031",
+    "15-1299"
+  ],
+  "lanes": {
+    "deployment_strategy": [
+      "deployment strategist",
+      "forward deployed",
+      "deployment lead",
+      "deployment manager",
+      "ai strategist",
+      "solution strategist",
+      "solutions strategist"
+    ],
+    "strategy_analytics": [
+      "strategy & analytics",
+      "strategy and analytics",
+      "strategy analyst",
+      "strategic analyst",
+      "business analyst",
+      "corporate strategy",
+      "strategic insights",
+      "strategy associate",
+      "strategy manager"
+    ],
+    "bizops": [
+      "bizops",
+      "biz ops",
+      "business operations",
+      "strategy & operations",
+      "strategy and operations",
+      "chief of staff"
+    ],
+    "gtm_ops": [
+      "gtm",
+      "go-to-market",
+      "go to market",
+      "revenue operations",
+      "revops",
+      "sales operations",
+      "sales strategy",
+      "marketing operations"
+    ],
+    "solutions": [
+      "solutions consultant",
+      "solutions engineer",
+      "solution engineer",
+      "sales engineer",
+      "solutions architect",
+      "technical account manager",
+      "pre-sales",
+      "presales"
+    ],
+    "ai_enablement": [
+      "ai enablement",
+      "ai success",
+      "ai engagement",
+      "ai solutions",
+      "ai transformation",
+      "ai adoption",
+      "ai program"
+    ],
+    "delivery_impl": [
+      "implementation",
+      "technical delivery",
+      "engagement manager",
+      "customer success",
+      "technical program manager",
+      "program manager",
+      "professional services"
+    ]
+  },
+  "adjacent_lanes": [
+    "delivery_impl"
+  ],
+  "level_too_senior": [
+    "director",
+    "vice president",
+    " vp",
+    "vp ",
+    "vp,",
+    "head of",
+    "chief ",
+    "senior manager",
+    "sr. manager",
+    "sr manager"
+  ],
+  "level_too_junior": [
+    "intern",
+    "internship",
+    "new grad",
+    "entry level",
+    "entry-level",
+    "junior",
+    "apprentice",
+    "co-op"
+  ],
+  "level_exceptions": [
+    "chief of staff"
+  ],
+  "restriction_patterns": {
+    "us_person_or_clearance": [
+      "u\\.?s\\.?\\s*person",
+      "united states person",
+      "security clearance",
+      "active clearance",
+      "\\bts/sci\\b",
+      "\\b(secret|top secret) clearance\\b",
+      "\\bpolygraph\\b",
+      "\\b(active|current)\\b[^.]{0,40}\\bclearance\\b",
+      "\\bitar\\b",
+      "u\\.?s\\.?\\s*citizen(ship)?\\s*(is\\s*)?(required|only)",
+      "must be a u\\.?s\\.?\\s*citizen"
+    ],
+    "no_sponsorship": [
+      "sponsorship[^.]{0,40}now or in the future",
+      "(not|unable to|cannot|can't|won't|will not)[^.]{0,30}sponsor",
+      "no (visa )?sponsorship",
+      "sponsorship is not available",
+      "without (the need for |requiring )?(visa |employer )?sponsorship"
+    ]
+  },
+  "regions": {
+    "boston_area": [
+      "boston",
+      "cambridge, ma",
+      "cambridge, massachusetts",
+      "somerville",
+      "waltham",
+      "burlington, ma",
+      "lexington, ma",
+      "needham",
+      "watertown, ma",
+      "massachusetts",
+      ", ma"
+    ],
+    "nyc": [
+      "new york",
+      "nyc",
+      "brooklyn",
+      "manhattan"
+    ],
+    "east_coast_other": [
+      "washington, dc",
+      "washington, d.c",
+      "philadelphia",
+      "providence",
+      "hartford",
+      "stamford",
+      "jersey city",
+      "newark",
+      "baltimore",
+      "arlington, va",
+      "reston",
+      "mclean",
+      "raleigh",
+      "durham",
+      "charlotte",
+      "atlanta",
+      "miami",
+      "tampa",
+      "orlando",
+      "portland, me",
+      "portsmouth, nh",
+      "manchester, nh",
+      "pittsburgh"
+    ],
+    "non_us": [
+      "london",
+      "dublin",
+      "toronto",
+      "vancouver",
+      "bangalore",
+      "bengaluru",
+      "berlin",
+      "paris",
+      "singapore",
+      "sydney",
+      "tokyo",
+      "amsterdam",
+      "tel aviv",
+      "warsaw",
+      "krakow",
+      "india",
+      "canada",
+      "united kingdom",
+      "emea",
+      "apac",
+      "germany",
+      "france",
+      "israel",
+      "mexico",
+      "brazil",
+      "poland",
+      "ireland",
+      "australia",
+      "japan",
+      "netherlands",
+      "spain",
+      "sweden",
+      "munich",
+      "madrid",
+      "stockholm"
+    ]
+  }
+}

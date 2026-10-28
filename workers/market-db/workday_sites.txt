@@ -1,0 +1,14 @@
+# Employers whose careers site runs on Workday. One per line:  Name | careers URL
+# Copy the URL from the employer's own job-search page (it contains "myworkdayjobs.com").
+State Street | https://statestreet.wd1.myworkdayjobs.com/Global
+Fidelity Investments | https://fmr.wd1.myworkdayjobs.com/FidelityCareers
+Mass General Brigham | https://massgeneralbrigham.wd1.myworkdayjobs.com/MGBExternal
+Vertex Pharmaceuticals | https://vrtx.wd501.myworkdayjobs.com/en-US/Vertex_Careers
+Moderna | https://modernatx.wd1.myworkdayjobs.com/en-US/M_tx
+Wellington Management | https://wellington.wd5.myworkdayjobs.com/External
+Manulife John Hancock | https://manulife.wd3.myworkdayjobs.com/en-US/MFCJH_Jobs
+Takeda | https://takeda.wd3.myworkdayjobs.com/External
+athenahealth | https://athenahealth.wd1.myworkdayjobs.com/External
+Northeastern University | https://northeastern.wd1.myworkdayjobs.com/en-US/careers
+Symbotic | https://symbotic.wd1.myworkdayjobs.com/en-US/Symbotic
+Insulet | https://insulet.wd5.myworkdayjobs.com/en-US/insuletcareers

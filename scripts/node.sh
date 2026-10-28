@@ -5,5 +5,5 @@ ok() { "$1" -e 'const [a, b] = process.versions.node.split(".").map(Number); pro
 for n in "$(command -v node)" "$HOME"/.nvm/versions/node/v*/bin/node /opt/homebrew/bin/node /usr/local/bin/node; do
   if [ -x "$n" ] && ok "$n"; then exec "$n" "$@"; fi
 done
-echo "job-agent needs Node 22.18 or newer; found $(node --version 2>/dev/null || echo none) on PATH." >&2
+echo "job-hunter needs Node 22.18 or newer; found $(node --version 2>/dev/null || echo none) on PATH." >&2
 exit 1

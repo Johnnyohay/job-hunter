@@ -4,3 +4,12 @@ node_modules/
 .state/
 logs/
 *.log
+# market-db worker: data and generated outputs stay local (~900 MB)
+workers/market-db/jobmarket.db
+workers/market-db/jobmarket.xlsx
+workers/market-db/exports/
+workers/market-db/cache/
+workers/market-db/logs/
+workers/market-db/dashboard.html
+workers/market-db/report.md
+__pycache__/

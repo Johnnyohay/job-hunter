@@ -1,0 +1,135 @@
+# One company name per line. `python3 jobmarket.py discover` checks each name against the public
+# Greenhouse, Lever and Ashby job-board APIs and adds a board only when the board confirms the name.
+# These are names to look up, not data. Add or remove freely.
+Wiz
+Snyk
+Datadog
+monday.com
+Gong
+SentinelOne
+7AI
+Dream Security
+HubSpot
+Klaviyo
+Toast
+Wayfair
+DraftKings
+Akamai
+Rapid7
+Tulip
+WHOOP
+athenahealth
+Flywire
+PTC
+SimpliSafe
+Boston Dynamics
+Ginkgo Bioworks
+Formlabs
+Motional
+ezCater
+CarGurus
+Tripadvisor
+Pegasystems
+Recorded Future
+Cybereason
+Immuta
+Aura
+Abnormal Security
+Transmit Security
+Veracode
+Black Duck
+Devoted Health
+Lovable
+Ramp
+Databricks
+Hugging Face
+EliseAI
+Braze
+Fivetran
+Camunda
+Asana
+Celonis
+Navan
+Affirm
+MongoDB
+Zendesk
+Proofpoint
+Varonis
+Cato Networks
+Armis
+Axonius
+Claroty
+Island
+Torq
+Orca Security
+Pentera
+Salt Security
+JFrog
+Fireblocks
+Riskified
+AppsFlyer
+Lemonade
+Papaya Global
+Deel
+Rapyd
+Melio
+Tipalti
+Forter
+Similarweb
+AI21 Labs
+CyberArk
+Check Point
+Cellebrite
+Nice
+Verbit
+Lusha
+Salesloft
+Cohere Health
+Chainalysis
+Anthropic
+OpenAI
+Glean
+Sierra
+Harvey
+Decagon
+Writer
+Vanta
+Drata
+Rippling
+Figma
+Notion
+Airtable
+Stripe
+Brex
+Plaid
+Samsara
+Verkada
+Okta
+Cloudflare
+CrowdStrike
+Zscaler
+Netskope
+Tanium
+Dragos
+Huntress
+Semperis
+Cyera
+Upwind
+Oligo Security
+Noma Security
+Kraft Analytics Group
+Assembled
+Rhino Federated Computing
+HappyRobot
+Nuvo
+Serval
+Console
+groundcover
+Northslope
+Basis
+Clarion
+Jerry
+Kahoot
+Restream
+Synthesia
+Fanatics

@@ -1,0 +1,428 @@
+[
+ {
+  "name": "Palantir",
+  "provider": "lever",
+  "slug": "palantir",
+  "origin": "deployment-radar companies.json"
+ },
+ {
+  "name": "Anduril",
+  "provider": "greenhouse",
+  "slug": "andurilindustries",
+  "origin": "deployment-radar companies.json"
+ },
+ {
+  "name": "Saronic",
+  "provider": "lever",
+  "slug": "saronic",
+  "origin": "deployment-radar companies.json"
+ },
+ {
+  "name": "Scale AI",
+  "provider": "greenhouse",
+  "slug": "scaleai",
+  "origin": "deployment-radar companies.json"
+ },
+ {
+  "name": "Applied Intuition",
+  "provider": "ashby",
+  "slug": "applied intuition",
+  "origin": "deployment-radar companies.json"
+ },
+ {
+  "name": "Skydio",
+  "provider": "ashby",
+  "slug": "skydio",
+  "origin": "deployment-radar companies.json"
+ },
+ {
+  "name": "Shield AI",
+  "provider": "lever",
+  "slug": "shieldai",
+  "origin": "deployment-radar companies.json"
+ },
+ {
+  "name": "Epirus",
+  "provider": "greenhouse",
+  "slug": "epirus",
+  "origin": "deployment-radar companies.json"
+ },
+ {
+  "name": "Vannevar Labs",
+  "provider": "greenhouse",
+  "slug": "vannevarlabs",
+  "origin": "deployment-radar companies.json"
+ },
+ {
+  "name": "Rebellion Defense",
+  "provider": "greenhouse",
+  "slug": "rebelliondefense",
+  "origin": "deployment-radar companies.json"
+ },
+ {
+  "name": "Chaos Industries",
+  "provider": "greenhouse",
+  "slug": "chaosindustries",
+  "origin": "deployment-radar companies.json"
+ },
+ {
+  "name": "Ursa Major",
+  "provider": "greenhouse",
+  "slug": "ursamajor",
+  "origin": "deployment-radar companies.json"
+ },
+ {
+  "name": "HawkEye 360",
+  "provider": "greenhouse",
+  "slug": "hawkeye360",
+  "origin": "deployment-radar companies.json"
+ },
+ {
+  "name": "Slingshot Aerospace",
+  "provider": "greenhouse",
+  "slug": "slingshotaerospace",
+  "origin": "deployment-radar companies.json"
+ },
+ {
+  "name": "CX2",
+  "provider": "lever",
+  "slug": "cx2",
+  "origin": "deployment-radar companies.json"
+ },
+ {
+  "name": "Gecko Robotics",
+  "provider": "ashby",
+  "slug": "gecko-robotics",
+  "origin": "deployment-radar companies.json"
+ },
+ {
+  "name": "Saildrone",
+  "provider": "greenhouse",
+  "slug": "saildroneinc",
+  "origin": "deployment-radar companies.json"
+ },
+ {
+  "name": "Cape",
+  "provider": "ashby",
+  "slug": "cape",
+  "origin": "deployment-radar companies.json"
+ },
+ {
+  "name": "Neros",
+  "provider": "greenhouse",
+  "slug": "nerostechnologies",
+  "origin": "deployment-radar companies.json"
+ },
+ {
+  "name": "Reveal Technology",
+  "provider": "lever",
+  "slug": "revealtech",
+  "origin": "deployment-radar companies.json"
+ },
+ {
+  "name": "Mach Industries",
+  "provider": "ashby",
+  "slug": "mach",
+  "origin": "deployment-radar companies.json"
+ },
+ {
+  "name": "True Anomaly",
+  "provider": "greenhouse",
+  "slug": "trueanomalyinc",
+  "origin": "deployment-radar companies.json"
+ },
+ {
+  "name": "LeoLabs",
+  "provider": "greenhouse",
+  "slug": "leolabsinc",
+  "origin": "deployment-radar companies.json"
+ },
+ {
+  "name": "Capella Space",
+  "provider": "greenhouse",
+  "slug": "capellaspace",
+  "origin": "deployment-radar companies.json"
+ },
+ {
+  "name": "Swarm Aero",
+  "provider": "ashby",
+  "slug": "swarmaero",
+  "origin": "deployment-radar companies.json"
+ },
+ {
+  "name": "Vatn Systems",
+  "provider": "greenhouse",
+  "slug": "vatnsystems",
+  "origin": "deployment-radar companies.json"
+ },
+ {
+  "name": "Onebrief",
+  "provider": "ashby",
+  "slug": "onebrief",
+  "origin": "deployment-radar companies.json"
+ },
+ {
+  "name": "Distributed Spectrum",
+  "provider": "ashby",
+  "slug": "distributed-spectrum",
+  "origin": "deployment-radar companies.json"
+ },
+ {
+  "name": "Nominal",
+  "provider": "lever",
+  "slug": "nominal",
+  "origin": "deployment-radar companies.json"
+ },
+ {
+  "name": "Albedo Space",
+  "provider": "greenhouse",
+  "slug": "albedo",
+  "origin": "deployment-radar companies.json"
+ },
+ {
+  "name": "SpaceX",
+  "provider": "greenhouse",
+  "slug": "spacex",
+  "origin": "deployment-radar companies.json"
+ },
+ {
+  "name": "OpenAI",
+  "provider": "ashby",
+  "slug": "openai",
+  "origin": "deployment-radar companies.json"
+ },
+ {
+  "name": "Anthropic",
+  "provider": "greenhouse",
+  "slug": "anthropic",
+  "origin": "deployment-radar companies.json"
+ },
+ {
+  "name": "Cohere",
+  "provider": "ashby",
+  "slug": "cohere",
+  "origin": "deployment-radar companies.json"
+ },
+ {
+  "name": "Striveworks",
+  "provider": "greenhouse",
+  "slug": "striveworks",
+  "origin": "deployment-radar companies.json"
+ },
+ {
+  "name": "Rhombus Power",
+  "provider": "greenhouse",
+  "slug": "rhombuspower",
+  "origin": "deployment-radar companies.json"
+ },
+ {
+  "name": "Distyl",
+  "provider": "ashby",
+  "slug": "distyl",
+  "origin": "deployment-radar validation report (board answered 2026-07-06)"
+ },
+ {
+  "name": "Auctor",
+  "provider": "ashby",
+  "slug": "auctor",
+  "origin": "deployment-radar validation report (board answered 2026-07-06)"
+ },
+ {
+  "name": "Encord",
+  "provider": "ashby",
+  "slug": "encord",
+  "origin": "deployment-radar validation report (board answered 2026-07-06)"
+ },
+ {
+  "name": "Tessera Labs",
+  "provider": "ashby",
+  "slug": "tessera-labs",
+  "origin": "deployment-radar validation report (board answered 2026-07-06)"
+ },
+ {
+  "name": "Amperos",
+  "provider": "ashby",
+  "slug": "amperos",
+  "origin": "deployment-radar validation report (board answered 2026-07-06)"
+ },
+ {
+  "name": "Asana",
+  "provider": "greenhouse",
+  "slug": "asana",
+  "origin": "deployment-radar validation report (board answered 2026-07-06)"
+ },
+ {
+  "name": "Camunda",
+  "provider": "ashby",
+  "slug": "camunda",
+  "origin": "deployment-radar validation report (board answered 2026-07-06)"
+ },
+ {
+  "name": "Datadog",
+  "provider": "greenhouse",
+  "slug": "datadog",
+  "origin": "deployment-radar validation report (board answered 2026-07-06)"
+ },
+ {
+  "name": "Snyk",
+  "provider": "ashby",
+  "slug": "snyk",
+  "origin": "deployment-radar validation report (board answered 2026-07-06)"
+ },
+ {
+  "name": "Fivetran",
+  "provider": "greenhouse",
+  "slug": "fivetran",
+  "origin": "deployment-radar validation report (board answered 2026-07-06)"
+ },
+ {
+  "name": "Synthesia",
+  "provider": "ashby",
+  "slug": "synthesia",
+  "origin": "deployment-radar validation report (board answered 2026-07-06)"
+ },
+ {
+  "name": "Affirm",
+  "provider": "greenhouse",
+  "slug": "affirm",
+  "origin": "deployment-radar validation report (board answered 2026-07-06)"
+ },
+ {
+  "name": "Tulip",
+  "provider": "greenhouse",
+  "slug": "tulip",
+  "origin": "deployment-radar validation report (board answered 2026-07-06)"
+ },
+ {
+  "name": "BetterUp",
+  "provider": "ashby",
+  "slug": "betterup",
+  "origin": "deployment-radar validation report (board answered 2026-07-06)"
+ },
+ {
+  "name": "Wiz",
+  "provider": "ashby",
+  "slug": "wiz",
+  "origin": "deployment-radar validation report (board answered 2026-07-06)"
+ },
+ {
+  "name": "Celonis",
+  "provider": "greenhouse",
+  "slug": "celonis",
+  "origin": "deployment-radar validation report (board answered 2026-07-06)"
+ },
+ {
+  "name": "Toast",
+  "provider": "greenhouse",
+  "slug": "toast",
+  "origin": "deployment-radar validation report (board answered 2026-07-06)"
+ },
+ {
+  "name": "Databricks",
+  "provider": "greenhouse",
+  "slug": "databricks",
+  "origin": "deployment-radar validation report (board answered 2026-07-06)"
+ },
+ {
+  "name": "Sierra",
+  "provider": "ashby",
+  "slug": "sierra",
+  "origin": "deployment-radar validation report (board answered 2026-07-06)"
+ },
+ {
+  "name": "Harvey",
+  "provider": "ashby",
+  "slug": "harvey",
+  "origin": "deployment-radar validation report (board answered 2026-07-06)"
+ },
+ {
+  "name": "Ramp",
+  "provider": "ashby",
+  "slug": "ramp",
+  "origin": "deployment-radar validation report (board answered 2026-07-06)"
+ },
+ {
+  "name": "Brex",
+  "provider": "greenhouse",
+  "slug": "brex",
+  "origin": "deployment-radar validation report (board answered 2026-07-06)"
+ },
+ {
+  "name": "Samsara",
+  "provider": "greenhouse",
+  "slug": "samsara",
+  "origin": "deployment-radar validation report (board answered 2026-07-06)"
+ },
+ {
+  "name": "Verkada",
+  "provider": "greenhouse",
+  "slug": "verkada",
+  "origin": "deployment-radar validation report (board answered 2026-07-06)"
+ },
+ {
+  "name": "Vanta",
+  "provider": "ashby",
+  "slug": "vanta",
+  "origin": "deployment-radar validation report (board answered 2026-07-06)"
+ },
+ {
+  "name": "Notion",
+  "provider": "ashby",
+  "slug": "notion",
+  "origin": "deployment-radar validation report (board answered 2026-07-06)"
+ },
+ {
+  "name": "Figma",
+  "provider": "greenhouse",
+  "slug": "figma",
+  "origin": "deployment-radar validation report (board answered 2026-07-06)"
+ },
+ {
+  "name": "Airtable",
+  "provider": "greenhouse",
+  "slug": "airtable",
+  "origin": "deployment-radar validation report (board answered 2026-07-06)"
+ },
+ {
+  "name": "Writer",
+  "provider": "ashby",
+  "slug": "writer",
+  "origin": "deployment-radar validation report (board answered 2026-07-06)"
+ },
+ {
+  "name": "Mercury",
+  "provider": "greenhouse",
+  "slug": "mercury",
+  "origin": "deployment-radar validation report (board answered 2026-07-06)"
+ },
+ {
+  "name": "Deel",
+  "provider": "ashby",
+  "slug": "deel",
+  "origin": "deployment-radar validation report (board answered 2026-07-06)"
+ },
+ {
+  "name": "Gusto",
+  "provider": "greenhouse",
+  "slug": "gusto",
+  "origin": "deployment-radar validation report (board answered 2026-07-06)"
+ },
+ {
+  "name": "Temporal",
+  "provider": "ashby",
+  "slug": "temporal",
+  "origin": "deployment-radar validation report (board answered 2026-07-06)"
+ },
+ {
+  "name": "Modern Treasury",
+  "provider": "ashby",
+  "slug": "moderntreasury",
+  "origin": "deployment-radar validation report (board answered 2026-07-06)"
+ },
+ {
+  "name": "SharkNinja",
+  "provider": "greenhouse",
+  "slug": "sharkninjaoperatingllc",
+  "origin": "added Oct 2026: top MA H-1B sponsor, board URL from its careers site"
+ }
+]

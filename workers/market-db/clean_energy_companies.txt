@@ -1,0 +1,48 @@
+# Clean and renewable energy employers. The government industry codes have no "clean energy" sector, so
+# employers are placed in it by this list, by a name keyword (solar, renewable, battery, hydrogen...) or by
+# NAICS codes 221114-221117 (solar, wind, geothermal, biomass power), 33591 (batteries) and 333611 (turbines).
+# One name per line. Names here are also looked up for a public job board by `jobmarket.py discover`.
+# -- from Built In Boston's renewable energy company list (Oct 2026)
+24M Technologies
+Resonant Energy
+Energetic Capital
+Elephant Energy
+Factorial Energy
+Electrified Thermal Solutions
+Borrego
+VesprSolar
+Malta Inc
+Electric Hydrogen
+Alva Energy
+RWE
+Monalee
+SunPower
+Clean Air Task Force
+EnergySage
+Nexamp
+# -- employers seen in the Massachusetts H-1B filings
+Commonwealth Fusion
+SolidEnergy Systems
+Nyobolt
+New Leaf Energy
+Nanoramic
+Enel North America
+BlueWave
+Envision Energy
+TotalEnergies Renewables
+Lightsource Renewable Energy
+LastMile Energy
+Quaise Energy
+Type One Energy
+Solect Energy
+Sustainable Energy Advantage
+Titan Advanced Energy Solutions
+Littoral Power Systems
+Avangrid
+LG Energy Solution
+# -- added from general knowledge, not from a source checked in this session
+Form Energy
+Ameresco
+Sublime Systems
+Boston Metal
+Longroad Energy

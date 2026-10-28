@@ -1,6 +1,18 @@
-# Job Agent
+# Job Hunter
 
-My job-application agent. It runs on my Mac through **Claude Code on my existing subscription**: no API keys, no cloud costs. Every morning it:
+My job-search service. Everything runs on my Mac, on my Claude subscription and public data: no API keys, no cloud costs. It has three workers:
+
+| Worker | When | What it does | Where |
+|---|---|---|---|
+| **Applicant** | Daily, 8:00 | Finds new roles at my target companies, scores them against my profile, finds hiring managers, drafts materials, tracks everything in my Application Tracker sheet | the repo root (`src/`, `config/`, `.claude/commands/daily.md`) |
+| **Market DB** | Daily, 7:10 | Builds a SQLite database of public labor-market data for Boston and the East Coast (BLS, Census, job postings) with a dashboard and CSV exports | `workers/market-db/` (its own [README](workers/market-db/README.md); Python, standard library) |
+| **Targeting map** | Weekly | Claude desktop scheduled task that refreshes my job-targeting map with current hiring trends | `workers/targeting-map/SKILL.md` (hard-linked to the task in `~/Claude/Scheduled/`, so editing either edits both) |
+
+Schedules: `npm run schedule` (Applicant) and `npm run schedule:market-db` (Market DB) install the launchd jobs; the targeting map is scheduled in the Claude desktop app. The market DB's data (`jobmarket.db`, exports, about 900 MB) stays local and out of git.
+
+## Applicant
+
+Every morning it:
 
 1. **Finds roles**: pulls every open job from the companies in my *Companies to Watch* sheet (Greenhouse, Lever and Ashby boards) plus any posting I paste into *Target Positions*.
 2. **Screens them**: a keyword and location filter (`config/search.ts`), then Claude scores each new role 0-100 against my CV, LinkedIn PDF, *About Me* notes and *Job Preferences*.

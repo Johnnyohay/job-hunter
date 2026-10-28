@@ -4,10 +4,12 @@
 #        npm run schedule -- --remove
 set -euo pipefail
 cd "$(dirname "$0")/.."
-label="com.jobagent.daily"
+label="com.jobhunter.applicant"
 plist="$HOME/Library/LaunchAgents/$label.plist"
 
 launchctl bootout "gui/$(id -u)/$label" 2>/dev/null || true
+launchctl bootout "gui/$(id -u)/com.jobagent.daily" 2>/dev/null || true   # the label before the rename
+rm -f "$HOME/Library/LaunchAgents/com.jobagent.daily.plist"
 if [[ "${1:-}" == "--remove" ]]; then
   rm -f "$plist"
   echo "Removed the daily schedule."
