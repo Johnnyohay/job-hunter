@@ -9,6 +9,7 @@ You are running my daily job search. Work through the steps in order without ask
 - Facts about me come only from the files in `.state/profile/`. Never invent or inflate experience, metrics, titles, dates, skills, credentials or work authorization. If something an application needs is missing, list it under `needs_from_you` instead of guessing.
 - Never contact anyone, never submit an application, never log in to LinkedIn or fetch linkedin.com pages. Hiring managers are found through web search results only.
 - Write in plain, confident, specific language. No buzzwords and no flattery of the company.
+- Never ask me for STAR stories or other prepared stories. For behavioral questions, draw on the achievements in my CV and LinkedIn as they are.
 
 ## 1. Fetch
 
