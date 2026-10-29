@@ -53,7 +53,7 @@ function toJob(ats: string, cfg: AtsConfig, board: string, company: string, raw:
 export async function fetchBoard(c: Company): Promise<Job[]> {
   const cfg = ATS[c.ats];
   if (!cfg) throw new Error(`unknown ATS "${c.ats}" (known: ${Object.keys(ATS).join(", ")}; add others in config/ats.ts)`);
-  const res = await fetch(cfg.list.replace("{board}", encodeURIComponent(c.board)));
+  const res = await fetch(cfg.list.replace("{board}", encodeURIComponent(c.board)), { signal: AbortSignal.timeout(60_000) });
   if (!res.ok) throw new Error(`${c.ats} board "${c.board}": HTTP ${res.status}`);
   const body = await res.json();
   const jobs = cfg.jobs ? pick(body, cfg.jobs)[0] : body;
@@ -90,7 +90,7 @@ export async function fetchJobUrl(url: string, company: string, title: string): 
     return { ...job, title: title || job.title };
   }
   // Any other site (Workday, company pages...): keep the page text; Claude reads it, applying stays manual.
-  const res = await fetch(url, { headers: { "user-agent": "Mozilla/5.0 job-agent" } });
+  const res = await fetch(url, { headers: { "user-agent": "Mozilla/5.0 job-agent" }, signal: AbortSignal.timeout(60_000) });
   const page = res.ok ? htmlToText(await res.text()) : "";
   return {
     id: `manual:${url}`,

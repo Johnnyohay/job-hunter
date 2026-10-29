@@ -6,6 +6,7 @@ async function call<T>(action: string, args: Record<string, unknown>): Promise<T
     method: "POST",
     headers: { "content-type": "text/plain" },
     body: JSON.stringify({ token: env("JOB_AGENT_TOKEN"), action, ...args }),
+    signal: AbortSignal.timeout(180_000), // never hang an unattended run on a stalled connection
   });
   const text = await res.text();
   let body: { ok: boolean; result?: T; error?: string };

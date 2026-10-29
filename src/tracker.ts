@@ -91,6 +91,21 @@ export async function readTracker(spreadsheetId: string, { allowOldColumns = fal
 export async function appendRows(spreadsheetId: string, rows: Row[]): Promise<void> {
   if (!rows.length) return;
   await sheetAppend(spreadsheetId, rows.map(toCells));
+  await sortTracker(spreadsheetId);
+}
+
+/** Best fit first; ties go to the most recently found. */
+export async function sortTracker(spreadsheetId: string): Promise<void> {
+  const { sheetId } = await sheetMeta(spreadsheetId);
+  await sheetBatchUpdate(spreadsheetId, [{
+    sortRange: {
+      range: { sheetId, startRowIndex: 1 },
+      sortSpecs: [
+        { dimensionIndex: COLUMNS.indexOf("Fit"), sortOrder: "DESCENDING" },
+        { dimensionIndex: COLUMNS.indexOf("Found"), sortOrder: "DESCENDING" },
+      ],
+    },
+  }]);
 }
 
 export async function updateRow(spreadsheetId: string, rowNumber: number, changes: Row): Promise<void> {

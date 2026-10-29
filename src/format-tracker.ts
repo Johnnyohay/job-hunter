@@ -2,7 +2,7 @@
 // row is rewritten into the current columns, matched by column name, so nothing is lost or shifted.
 // Usage: npm run tracker:format
 import { env } from "./env.ts";
-import { COLUMNS, formatTracker, readTracker, rewriteTracker, type Row } from "./tracker.ts";
+import { COLUMNS, formatTracker, sortTracker, readTracker, rewriteTracker, type Row } from "./tracker.ts";
 
 /** Columns that were renamed: old name -> current name. */
 const RENAMED: Record<string, string> = { Location: "Locations (as posted)", Compensation: "Comp (as posted)" };
@@ -20,4 +20,5 @@ const current: Row[] = rows.map((old) => {
 
 await rewriteTracker(id, current);
 await formatTracker(id);
+await sortTracker(id);
 console.log(`Tracker: ${current.length} rows in ${COLUMNS.length} typed columns.`);
