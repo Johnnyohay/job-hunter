@@ -1,12 +1,27 @@
 // Google Drive and Sheets through the Apps Script bridge (apps-script/Code.gs): no Cloud credentials needed.
 import { env } from "./env.ts";
 
+// Safe to repeat: reads, and writes that set the same values again. Not append/createDoc/setup.
+const IDEMPOTENT = new Set(["list", "docText", "bytes", "values", "meta", "setRange", "batchUpdate"]);
+
 async function call<T>(action: string, args: Record<string, unknown>): Promise<T> {
+  for (let attempt = 1; ; attempt++) {
+    try {
+      return await callOnce<T>(action, args);
+    } catch (e) {
+      const network = e instanceof Error && (e.name === "TimeoutError" || e.name === "TypeError");
+      if (!network || !IDEMPOTENT.has(action) || attempt === 3) throw e;
+      await new Promise((r) => setTimeout(r, 15_000 * attempt));
+    }
+  }
+}
+
+async function callOnce<T>(action: string, args: Record<string, unknown>): Promise<T> {
   const res = await fetch(env("JOB_AGENT_SCRIPT_URL"), {
     method: "POST",
     headers: { "content-type": "text/plain" },
     body: JSON.stringify({ token: env("JOB_AGENT_TOKEN"), action, ...args }),
-    signal: AbortSignal.timeout(180_000), // never hang an unattended run on a stalled connection
+    signal: AbortSignal.timeout(90_000), // never hang an unattended run on a stalled connection
   });
   const text = await res.text();
   let body: { ok: boolean; result?: T; error?: string };
