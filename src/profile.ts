@@ -1,6 +1,7 @@
 import { env } from "./env.ts";
 import { FOLDER, GDOC, GSHEET, docText, fileBytes, listFolder, sheetRecords, type DriveFile } from "./google.ts";
 import { field } from "./text.ts";
+import { companies as extraCompanies } from "../config/companies.ts";
 import type { Company } from "./types.ts";
 
 export interface Profile {
@@ -73,9 +74,16 @@ export async function loadProfile(): Promise<Profile> {
 }
 
 export async function loadCompanies(p: Profile): Promise<Company[]> {
-  return (await sheetRecords(p.companiesId))
+  const rows = await sheetRecords(p.companiesId);
+  const key = (c: { ats: string; board: string }) => `${c.ats}:${c.board.toLowerCase()}`;
+  // Rows marked inactive in the sheet also switch off the same board in config/companies.ts.
+  const off = new Set(rows.filter((r) => r.Board && /^(no|n|false|0)$/i.test(r.Active ?? ""))
+    .map((r) => key({ ats: (r.ATS || "").toLowerCase().trim(), board: r.Board })));
+  const sheet = rows
     .filter((r) => r.Board && !/^(no|n|false|0)$/i.test(r.Active ?? ""))
     .map((r) => ({ company: r.Company || r.Board, ats: (r.ATS || "").toLowerCase().trim(), board: r.Board }));
+  const seen = new Set([...sheet.map(key), ...off]);
+  return [...sheet, ...extraCompanies.filter((c) => !seen.has(key(c)))];
 }
 
 export async function loadTargets(p: Profile): Promise<{ url: string; company: string; title: string }[]> {

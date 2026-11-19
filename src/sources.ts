@@ -58,7 +58,15 @@ export async function fetchBoard(c: Company): Promise<Job[]> {
   const body = await res.json();
   const jobs = cfg.jobs ? pick(body, cfg.jobs)[0] : body;
   if (!Array.isArray(jobs)) throw new Error(`${c.ats} response has no job list at "${cfg.jobs}" (config/ats.ts)`);
-  return jobs.map((j) => toJob(c.ats, cfg, c.board, c.company || c.board, j));
+  // A single malformed posting is skipped; the board only fails if none of its postings can be read,
+  // which means config/ats.ts no longer matches the ATS response.
+  const out: Job[] = [];
+  let firstError: unknown;
+  for (const j of jobs) {
+    try { out.push(toJob(c.ats, cfg, c.board, c.company || c.board, j)); } catch (e) { firstError ??= e; }
+  }
+  if (jobs.length && !out.length) throw firstError;
+  return out;
 }
 
 /** The ATS, board and job id behind a posting URL, when it's on a known board. */

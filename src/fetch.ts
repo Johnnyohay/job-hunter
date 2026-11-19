@@ -19,9 +19,15 @@ export interface RunInfo {
 
 const dryRun = process.argv.includes("--dry-run");
 
+/** Same company + same title (ignoring case, punctuation and bracketed notes like "(Remote)") = same position. */
+export const roleKey = (company: string, title: string) =>
+  `${company} | ${title.replace(/\([^)]*\)|\[[^\]]*\]/g, " ")}`.toLowerCase().replace(/[^a-z0-9|]+/g, " ").trim();
+
 async function main() {
   const profile = await loadProfile();
-  const tracked = new Set((await readTracker(profile.trackerId)).map((r) => r["Job ID"]));
+  const rows = await readTracker(profile.trackerId);
+  const tracked = new Set(rows.map((r) => r["Job ID"]));
+  const trackedRoles = new Set(rows.filter((r) => r.Company && r.Title).map((r) => roleKey(r.Company!, r.Title!)));
 
   // Collect: every watched company's board, plus the specific positions I listed.
   const companies = await loadCompanies(profile);
@@ -38,12 +44,21 @@ async function main() {
   const targetJobs = targets.flatMap((t) => (t.status === "fulfilled" ? [t.value] : (errors.push(String(t.reason)), [])));
 
   // Screen: new jobs only; listed positions skip the keyword filter.
-  const fresh = (j: Job) => !tracked.has(j.id);
-  const candidates = [
+  // A position counts once: the same company + title reposted on another day, or posted once per city,
+  // is noise. Reposts of a tracked role are dropped; same-role postings in one run merge their locations.
+  const fresh = (j: Job) => !tracked.has(j.id) && !trackedRoles.has(roleKey(j.company, j.title));
+  const byRole = new Map<string, Job>();
+  for (const j of [
     ...targetJobs.filter(fresh),
     ...boardJobs.filter(fresh).filter((j) => passesPrefilter(j))
       .sort((a, b) => (b.postedAt ?? "").localeCompare(a.postedAt ?? "")),
-  ].slice(0, search.limits.maxScoredPerRun);
+  ]) {
+    const k = roleKey(j.company, j.title);
+    const kept = byRole.get(k);
+    if (!kept) byRole.set(k, { ...j });
+    else if (j.location && !kept.location.includes(j.location)) kept.location = [kept.location, j.location].filter(Boolean).join(" / ");
+  }
+  const candidates = [...byRole.values()].slice(0, search.limits.maxScoredPerRun);
 
   console.log(`${companies.length} companies, ${boardJobs.length} open jobs, ${targetJobs.length} listed positions -> ${candidates.length} new to score`);
   for (const e of errors) console.log(`  problem: ${e}`);
