@@ -3,6 +3,11 @@
 cd "$(dirname "$0")/.." || exit 1
 mkdir -p logs
 log="logs/daily-$(date +%F).log"
+# The schedule fires more than once a day as a safety net; skip once today's run has been recorded.
+if [[ -f .state/results.recorded.json ]] && grep -q "\"date\": \"$(date +%F)\"" .state/run.json 2>/dev/null; then
+  echo "=== $(date) today's run is already recorded; nothing to do" >> "$log"
+  exit 0
+fi
 {
   echo "=== $(date)"
   # Permissions are passed here (not only in .claude/settings.json) so an unattended run never waits for approval.
